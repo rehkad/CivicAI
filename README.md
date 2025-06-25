@@ -1,13 +1,21 @@
 # CivicAI
-CivicAI is a self-hosted AI chatbot that answers local government questions—like trash pickup, permits, or municipal codes—using public city data. Easily customizable for any U.S. city with local or cloud LLMs, vector search, and a simple web UI.
+CivicAI is a self-hosted AI chatbot that answers local government questions\u2014like trash pickup, permits, or municipal codes\u2014using public city data. Easily customizable for any U.S. city with local or cloud LLMs, vector search, and a simple web UI.
 
-## Components
+## Setup
+1. Ensure Python 3.8 or newer is installed.
+2. Clone this repository and change into its directory.
+3. (Optional) Create a virtual environment: `python -m venv .venv && source .venv/bin/activate`.
+4. Start the API server:
+   ```bash
+   python api/app.py
+   ```
+5. Visit `http://localhost:8000` to verify the server is running.
 
-### API
-The `api/` directory contains the backend API server. Start developing by editing `api/app.py` and extending the endpoints as needed.
+## Folder overview
+- **`api/`** \u2013 backend API server written in Python.
+- **`web/`** \u2013 front-end web application placeholder.
+- **`data/`** \u2013 example datasets and loading scripts.
 
-### Web
-The `web/` directory is intended for the front-end web application.
+## Development
+Edit `api/app.py` to add endpoints or change logic. The server automatically reloads when you restart the command above. Front-end and data-related code live under `web/` and `data/` respectively.
 
-### Data
-The `data/` directory holds sample datasets or data-loading scripts.
