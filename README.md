@@ -11,3 +11,14 @@ The `web/` directory is intended for the front-end web application.
 
 ### Data
 The `data/` directory holds sample datasets or data-loading scripts.
+
+## Running Tests
+
+Run `pytest` from the repository root to execute the test suite:
+
+```bash
+pytest
+```
+
+This will start a temporary API server and verify that the `/chat` endpoint
+responds with JSON.
