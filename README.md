@@ -5,14 +5,23 @@ CivicAI is a self-hosted AI chatbot that answers local government questions\u201
 1. Ensure Python 3.8 or newer is installed.
 2. Clone this repository and change into its directory.
 3. (Optional) Create a virtual environment: `python -m venv .venv && source .venv/bin/activate`.
+ffs0qa-codex/update-readme-with-setup-instructions
+4. Install dependencies using `./setup.sh`. When no internet connection is available the script installs from a prepopulated `wheels/` directory.
+=======
 4. Run `./setup.sh` to install dependencies from the `wheels/` directory.
    The wheel files must be built or downloaded on a machine with internet access
    and copied into `wheels/` before running this script.
+main
 5. Start the API server:
    ```bash
    uvicorn main:app --host 0.0.0.0 --port 8000
    ```
 6. Visit `http://localhost:8000` to verify the server is running.
+ffs0qa-codex/update-readme-with-setup-instructions
+
+**Workflow:** run `./setup.sh`, then `python data/ingest.py`, and finally `python api/app.py`.
+=======
+ main
 
 ### Ingesting city data
 Sample Santa Barbara documents are provided in `data/santa_barbara/`. The
