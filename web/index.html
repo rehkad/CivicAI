@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CivicAI Chat</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.4/dist/tailwind.min.css" rel="stylesheet">
     <style>
         .loader {
             border-top-color: #3490dc;
@@ -16,9 +16,9 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 h-screen flex items-center justify-center">
-<div class="flex flex-col w-full max-w-xl h-[90vh] bg-white rounded-lg shadow-lg">
-    <header class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 text-center text-xl font-semibold">CivicAI Chat</header>
+<body class="bg-gradient-to-br from-slate-100 to-slate-200 h-screen flex items-center justify-center">
+<div class="flex flex-col w-full max-w-xl h-[90vh] bg-white rounded-xl shadow-xl overflow-hidden">
+    <header class="bg-gradient-to-r from-blue-700 to-purple-600 text-white p-4 text-center text-xl font-semibold shadow">CivicAI Chat</header>
     <div id="chat" class="flex-1 overflow-y-auto p-4 space-y-2"></div>
     <form id="inputForm" class="flex border-t border-gray-200">
         <input type="text" id="message" placeholder="Type your message..." autocomplete="off" required class="flex-1 p-3 outline-none" />
@@ -34,9 +34,11 @@ const API_BASE = window.API_BASE || '';
 
 function appendMessage(text, sender) {
     const div = document.createElement('div');
-    div.className = sender === 'You'
-        ? 'self-end bg-blue-100 text-gray-900 rounded-lg p-2 max-w-[80%] shadow'
-        : 'self-start bg-gray-200 text-gray-900 rounded-lg p-2 max-w-[80%] shadow';
+    div.className =
+        (sender === 'You'
+            ? 'self-end bg-blue-600 text-white'
+            : 'self-start bg-gray-200 text-gray-900') +
+        ' whitespace-pre-wrap rounded-lg px-3 py-2 max-w-[80%] shadow';
     div.textContent = text;
     div.classList.add('msg');
     chat.appendChild(div);
@@ -58,12 +60,16 @@ async function streamMessage(text) {
         if (!resp.ok || !resp.body) throw new Error('stream unavailable');
         const reader = resp.body.getReader();
         const decoder = new TextDecoder();
+        spinner.remove();
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-            spinner.remove();
-            msgDiv.textContent += decoder.decode(value);
-            chat.scrollTop = chat.scrollHeight;
+            const chunk = decoder.decode(value);
+            for (const ch of chunk) {
+                msgDiv.textContent += ch;
+                chat.scrollTop = chat.scrollHeight;
+                await new Promise(r => setTimeout(r, 5));
+            }
         }
         spinner.remove();
     } catch (err) {
@@ -76,6 +82,7 @@ async function streamMessage(text) {
             const data = await fallback.json();
             spinner.remove();
             msgDiv.textContent = data.response;
+            chat.scrollTop = chat.scrollHeight;
         } catch (err2) {
             spinner.remove();
             msgDiv.textContent = 'Error: ' + err2;
