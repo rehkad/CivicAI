@@ -39,8 +39,14 @@
             if (!text) return;
             appendMessage(text, 'You');
             input.value = '';
-            // Placeholder for bot response
-            setTimeout(() => appendMessage('This is a placeholder response.', 'Bot'), 500);
+            fetch('http://localhost:8000/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text })
+            })
+            .then(r => r.json())
+            .then(data => appendMessage(data.response, 'Bot'))
+            .catch(err => appendMessage('Error: ' + err, 'Bot'));
         });
     </script>
 </body>

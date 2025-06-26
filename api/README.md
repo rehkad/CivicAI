@@ -1,1 +1,10 @@
-# API\n\nPlaceholder for API server code.
+# API
+
+The FastAPI server exposes a `/chat` endpoint that generates answers using a
+local or remote LLM. Before running the server, ingest city documents so the
+vector database can provide context:
+
+```bash
+python ../data/ingest.py
+python app.py
+```
