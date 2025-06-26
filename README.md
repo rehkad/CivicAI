@@ -51,3 +51,13 @@ API. Without it, the server falls back to local models when available or returns
 
 Run `pytest` to execute the small test suite.
 
+### Running on Replit
+
+This repository includes a simple `replit.nix` file so that a Python
+interpreter is available by default when opened on Replit. The Nix
+configuration installs `python3` and `pip`, letting you run the
+application without manual setup. After the environment loads, execute
+`./setup.sh` to install all Python dependencies. When the `wheels/`
+directory is present the script installs from those prebuilt wheels so a
+network connection is unnecessary.
+
