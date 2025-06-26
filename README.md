@@ -8,7 +8,7 @@ CivicAI is a self-hosted AI chatbot that answers local government questions\u201
 3. **(Optional) create and activate a virtual environment** before installing dependencies:
    `python3 -m venv .venv && source .venv/bin/activate` (use `python -m venv` if `python3` isn't available).
    If no environment is active, `./setup.sh` automatically creates `.venv` and installs packages there.
-4. Install dependencies using `./setup.sh`. When no internet connection is available the script installs from a prepopulated `wheels/` directory. This script also installs `pip` when it's missing and activates `.venv` when necessary.
+4. Install dependencies using `./setup.sh`. When the `wheels/` directory contains wheel files the script installs from them; otherwise it falls back to downloading packages. This script also installs `pip` when it's missing and activates `.venv` when necessary.
 5. If you see `ModuleNotFoundError` errors (e.g., for FastAPI) or `pip` isn't found, rerun `./setup.sh` to ensure all dependencies are installed.
 6. Start the API server:
    ```bash
@@ -29,8 +29,8 @@ pip download -r requirements.txt -d wheels
 ```
 
 This creates wheel files under the `wheels/` directory. When offline, the
-`./setup.sh` script installs packages from this directory instead of contacting
-PyPI.
+`./setup.sh` script installs from these wheels if they are available;
+otherwise it will attempt to download packages from PyPI.
 
 If you run `./setup.sh` and see a message like `Missing wheel files for packages: fastapi ...`,
 it's because the required wheels aren't present in the `wheels/` folder. Run the
@@ -95,6 +95,6 @@ interpreter is available by default when opened on Replit. The Nix
 configuration installs `python3` and `pip`, letting you run the
 application without manual setup. After the environment loads, execute
 `./setup.sh` to install all Python dependencies. When the `wheels/`
-directory is present the script installs from those prebuilt wheels so a
-network connection is unnecessary.
+directory contains wheel files the script installs from those prebuilt wheels,
+so a network connection is unnecessary.
 

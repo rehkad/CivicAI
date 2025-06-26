@@ -23,28 +23,36 @@ fi
 $PY_CMD -m ensurepip --upgrade
 $PY_CMD -m pip install --upgrade pip
 
-# If a local wheels directory exists, install from there
+# If wheel files exist locally, install from there; otherwise use PyPI
 if [ -d "wheels" ]; then
-    # Verify that every requirement has a corresponding wheel file
-    missing=()
-    shopt -s nocaseglob
-    while read -r req; do
-        req=$(echo "$req" | sed 's/#.*//' | xargs)
-        [ -z "$req" ] && continue
-        pkg=$(echo "$req" | cut -d'[' -f1 | cut -d'<' -f1 | cut -d'>' -f1 \
-            | cut -d'=' -f1 | cut -d' ' -f1 | cut -d';' -f1)
-        wheel_pkg=$(echo "$pkg" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
-        if ! compgen -G "wheels/${wheel_pkg}-*.whl" > /dev/null; then
-            missing+=("$pkg")
+    shopt -s nullglob nocaseglob
+    wheel_files=(wheels/*.whl)
+    shopt -u nullglob nocaseglob
+    if [ ${#wheel_files[@]} -gt 0 ]; then
+        # Verify that every requirement has a corresponding wheel file
+        missing=()
+        shopt -s nocaseglob
+        while read -r req; do
+            req=$(echo "$req" | sed 's/#.*//' | xargs)
+            [ -z "$req" ] && continue
+            pkg=$(echo "$req" | cut -d'[' -f1 | cut -d'<' -f1 | cut -d'>' -f1 \
+                | cut -d'=' -f1 | cut -d' ' -f1 | cut -d';' -f1)
+            wheel_pkg=$(echo "$pkg" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
+            if ! compgen -G "wheels/${wheel_pkg}-*.whl" > /dev/null; then
+                missing+=("$pkg")
+            fi
+        done < requirements.txt
+        shopt -u nocaseglob
+        if [ ${#missing[@]} -ne 0 ]; then
+            echo "Missing wheel files for packages: ${missing[*]}" >&2
+            echo "Run: pip download -r requirements.txt -d wheels while online." >&2
+            exit 1
         fi
-    done < requirements.txt
-    shopt -u nocaseglob
-    if [ ${#missing[@]} -ne 0 ]; then
-        echo "Missing wheel files for packages: ${missing[*]}" >&2
-        echo "Run: pip download -r requirements.txt -d wheels while online." >&2
-        exit 1
+        $PY_CMD -m pip install --no-index --find-links wheels -r requirements.txt
+    else
+        echo "No wheel files found in wheels/. Falling back to online installation." >&2
+        $PY_CMD -m pip install -r requirements.txt
     fi
-    $PY_CMD -m pip install --no-index --find-links wheels -r requirements.txt
 else
     $PY_CMD -m pip install -r requirements.txt
 fi
