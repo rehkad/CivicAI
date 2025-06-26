@@ -8,6 +8,16 @@ if [ -z "$PY_CMD" ]; then
     exit 1
 fi
 
+# Create a virtual environment automatically when none is active
+if [ -z "$VIRTUAL_ENV" ]; then
+    echo "No virtual environment detected. Using .venv for setup." >&2
+    if [ ! -d ".venv" ]; then
+        "$PY_CMD" -m venv .venv
+    fi
+    # shellcheck disable=SC1091
+    source .venv/bin/activate
+fi
+
 # Upgrade pip
 $PY_CMD -m ensurepip --upgrade
 $PY_CMD -m pip install --upgrade pip
