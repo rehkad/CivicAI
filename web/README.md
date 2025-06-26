@@ -12,3 +12,6 @@ python3 -m http.server 8080
 ```
 
 Then open [http://localhost:8080](http://localhost:8080) in your browser and interact with the chat.
+
+Messages are sent to the API server running on `http://localhost:8000/chat`, so
+ensure the FastAPI server is active.
