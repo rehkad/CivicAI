@@ -37,3 +37,17 @@ Edit `api/app.py` to add endpoints or change logic. The server automatically rel
 The included web interface (`web/index.html`) sends messages to the FastAPI
 server at `http://localhost:8000/chat`.
 
+### API Endpoints
+
+- `GET /health` – simple health check returning `{"status": "ok"}`.
+- `POST /chat` – send a message and receive an LLM response.
+- `POST /ingest` – rebuild the local vector database from documents.
+
+Set the `OPENAI_API_KEY` environment variable if you want to use the OpenAI
+API. Without it, the server falls back to local models when available or returns
+"LLM response unavailable.".
+
+### Running tests
+
+Run `pytest` to execute the small test suite.
+
