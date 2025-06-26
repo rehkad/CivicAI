@@ -14,3 +14,19 @@ def test_chat_route():
     resp = client.post("/chat", json={"message": "Hello"})
     assert resp.status_code == 200
     assert "response" in resp.json()
+
+
+def test_ingest_endpoint(monkeypatch):
+    """POST /ingest returns completed status and calls ingest.main."""
+
+    called = {}
+
+    def fake_main():
+        called["hit"] = True
+
+    monkeypatch.setattr("data.ingest.main", fake_main)
+
+    resp = client.post("/ingest")
+    assert resp.status_code == 200
+    assert resp.json() == {"status": "completed"}
+    assert called.get("hit") is True
