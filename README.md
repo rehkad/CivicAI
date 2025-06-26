@@ -16,6 +16,19 @@ CivicAI is a self-hosted AI chatbot that answers local government questions\u201
 
 **Workflow:** run `./setup.sh`, then `python3 data/ingest.py` (or `python data/ingest.py`), and finally `python3 api/app.py` (or `python api/app.py`).
 
+### Using Ollama with OpenHermes
+1. Install [Ollama](https://ollama.ai) with:
+   ```bash
+   curl https://ollama.ai/install.sh | sh
+   ```
+2. Start the local model server and download the model:
+   ```bash
+   ollama serve &
+   ollama pull openhermes
+   ```
+3. With `ollama` running, the API will query the `openhermes` model whenever
+   `OPENAI_API_KEY` is not set.
+
 ### Ingesting city data
 Sample Santa Barbara documents are provided in `data/santa_barbara/`. The
 ingestion script requires the `BAAI/bge-small-en` embeddings model. Download
@@ -46,7 +59,8 @@ server at `http://localhost:8000/chat`.
 - `POST /ingest` – rebuild the local vector database from documents.
 
 Set the `OPENAI_API_KEY` environment variable if you want to use the OpenAI
-API. Without it, the server falls back to local models when available or returns
+API. Leaving this variable unset makes the app rely solely on the local
+`openhermes` model via `ollama`. Without either model the server returns
 "LLM response unavailable.".
 
 ### Running tests
