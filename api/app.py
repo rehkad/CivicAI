@@ -1,8 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from pathlib import Path
 import os
+
+WEB_DIR = Path(__file__).parent.parent / "web"
 
 app = FastAPI()
 
@@ -85,6 +88,10 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     response: str
 
+
+@app.get("/", response_class=FileResponse)
+async def index():
+    return FileResponse(WEB_DIR / "index.html")
 
 @app.get("/health")
 async def health() -> dict[str, str]:
