@@ -1,6 +1,8 @@
 # Web
 
-This directory contains a simple single-page chat interface.
+This directory contains a single-page chat interface.
+The page now includes a clean layout with chat bubbles for a more polished experience.
+Press the **Send** button or hit **Enter** to submit a message.
 
 ## Launching the UI
 
