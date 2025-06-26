@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
 from pathlib import Path
 import os
@@ -59,11 +59,18 @@ if embeddings and Chroma:
 
 
 class ChatEngine:
-    async def generate(self, prompt: str) -> str:
+    def stream(self, prompt: str):
+        """Yield tokens from the model if streaming is supported."""
         if ollama:
             try:
-                result = ollama.generate(model="openhermes:latest", prompt=prompt)
-                return result.get("response", "")
+                for chunk in ollama.generate(
+                    model="openhermes:latest", prompt=prompt, stream=True
+                ):
+                    if isinstance(chunk, dict):
+                        yield chunk.get("response", "")
+                    else:
+                        yield str(chunk)
+                return
             except Exception:
                 pass
         if openai:
@@ -71,11 +78,20 @@ class ChatEngine:
                 resp = openai.ChatCompletion.create(
                     model="gpt-3.5-turbo",
                     messages=[{"role": "user", "content": prompt}],
+                    stream=True,
                 )
-                return resp.choices[0].message["content"].strip()
+                for part in resp:
+                    delta = part["choices"][0]["delta"].get("content")
+                    if delta:
+                        yield delta
+                return
             except Exception:
                 pass
-        return "LLM response unavailable."
+        yield "LLM response unavailable."
+
+    def generate(self, prompt: str) -> str:
+        """Return the full response from the model."""
+        return "".join(list(self.stream(prompt)))
 
 
 engine = ChatEngine()
@@ -110,8 +126,27 @@ async def chat(req: ChatRequest):
         except Exception:
             context = ""
     prompt = f"Context:\n{context}\n\nUser: {req.message}\nAssistant:"
-    reply = await engine.generate(prompt)
+    reply = engine.generate(prompt)
     return {"response": reply}
+
+
+@app.post("/chat_stream")
+async def chat_stream(req: ChatRequest):
+    """Stream the LLM response token by token."""
+    context = ""
+    if vectordb:
+        try:
+            docs = vectordb.similarity_search(req.message, k=3)
+            context = "\n\n".join(d.page_content for d in docs)
+        except Exception:
+            context = ""
+    prompt = f"Context:\n{context}\n\nUser: {req.message}\nAssistant:"
+
+    def token_gen():
+        for token in engine.stream(prompt):
+            yield token
+
+    return StreamingResponse(token_gen(), media_type="text/plain")
 
 
 @app.post("/ingest")
