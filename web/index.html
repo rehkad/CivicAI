@@ -19,6 +19,8 @@
 const chat = document.getElementById('chat');
 const form = document.getElementById('inputForm');
 const input = document.getElementById('message');
+// Allow customizing the API prefix via `window.API_BASE`
+const API_BASE = window.API_BASE || '';
 
 function appendMessage(text, sender) {
     const div = document.createElement('div');
@@ -35,7 +37,7 @@ async function streamMessage(text) {
     appendMessage('', 'Bot');
     const msgDiv = chat.lastChild;
     try {
-        const resp = await fetch('/chat_stream', {
+        const resp = await fetch(`${API_BASE}/chat_stream`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message: text })
@@ -51,7 +53,7 @@ async function streamMessage(text) {
         }
     } catch (err) {
         try {
-            const fallback = await fetch('/chat', {
+            const fallback = await fetch(`${API_BASE}/chat`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message: text })
