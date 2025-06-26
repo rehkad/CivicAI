@@ -59,6 +59,20 @@ if embeddings and Chroma:
 
 
 class ChatEngine:
+    """Wrapper around whichever LLM is available."""
+
+    fallback_message = (
+        "The assistant is running in demo mode. Configure an LLM to get real "
+        "answers."
+    )
+
+    def _fallback_stream(self, prompt: str):
+        """Simple echo-style fallback when no LLM is configured."""
+        user_msg = prompt.split("User:")[-1].split("Assistant:")[0].strip()
+        text = f"(demo) You said: {user_msg}" if user_msg else self.fallback_message
+        for ch in text:
+            yield ch
+
     def stream(self, prompt: str):
         """Yield tokens from the model if streaming is supported."""
         if ollama:
@@ -87,7 +101,8 @@ class ChatEngine:
                 return
             except Exception:
                 pass
-        yield "LLM response unavailable."
+        # Fall back to a simple local response so the app still functions.
+        yield from self._fallback_stream(prompt)
 
     def generate(self, prompt: str) -> str:
         """Return the full response from the model."""

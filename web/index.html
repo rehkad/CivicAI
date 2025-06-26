@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CivicAI Chat</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .loader {
+            border-top-color: #3490dc;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body class="bg-gray-100 h-screen flex items-center justify-center">
 <div class="flex flex-col w-full max-w-xl h-[90vh] bg-white rounded-lg shadow-lg">
@@ -36,6 +46,9 @@ function appendMessage(text, sender) {
 async function streamMessage(text) {
     appendMessage('', 'Bot');
     const msgDiv = chat.lastChild;
+    const spinner = document.createElement('div');
+    spinner.className = 'loader border-2 border-gray-200 rounded-full w-4 h-4 inline-block ml-1';
+    msgDiv.appendChild(spinner);
     try {
         const resp = await fetch(`${API_BASE}/chat_stream`, {
             method: 'POST',
@@ -48,9 +61,11 @@ async function streamMessage(text) {
         while (true) {
             const { done, value } = await reader.read();
             if (done) break;
+            spinner.remove();
             msgDiv.textContent += decoder.decode(value);
             chat.scrollTop = chat.scrollHeight;
         }
+        spinner.remove();
     } catch (err) {
         try {
             const fallback = await fetch(`${API_BASE}/chat`, {
@@ -59,8 +74,10 @@ async function streamMessage(text) {
                 body: JSON.stringify({ message: text })
             });
             const data = await fallback.json();
+            spinner.remove();
             msgDiv.textContent = data.response;
         } catch (err2) {
+            spinner.remove();
             msgDiv.textContent = 'Error: ' + err2;
         }
     }
