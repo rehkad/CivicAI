@@ -100,7 +100,8 @@
             if (!text) return;
             appendMessage(text, 'You');
             input.value = '';
-            fetch('http://localhost:8000/chat', {
+            // send to the API running on the same host
+            fetch('/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message: text })
