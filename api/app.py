@@ -161,7 +161,7 @@ async def chat_stream(req: ChatRequest):
         for token in engine.stream(prompt):
             yield token
 
-    return StreamingResponse(token_gen(), media_type="text/plain")
+    return StreamingResponse(token_gen(), media_type="text/plain; charset=utf-8")
 
 
 @app.post("/ingest")
