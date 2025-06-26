@@ -14,7 +14,7 @@ CivicAI is a self-hosted AI chatbot that answers local government questions\u201
    ```bash
    uvicorn main:app --host 0.0.0.0 --port 8000
    ```
-7. Visit `http://localhost:8000` to verify the server is running.
+7. Visit `http://localhost:8000/health` to confirm the server is running. `http://localhost:8000` returns `404` because no root page is served; the web interface is under `web/`.
 
 Alternatively, execute `./start.sh` to perform steps 3–7 automatically.
 
