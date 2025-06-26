@@ -2,6 +2,7 @@
 set -e
 
 # Upgrade pip
+python3 -m ensurepip --upgrade
 python3 -m pip install --upgrade pip
 
 # If a local wheels directory exists, install from there
