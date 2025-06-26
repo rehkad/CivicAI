@@ -2,5 +2,5 @@ fastapi
 uvicorn
 langchain
 chromadb
-openai
+openai>=0.27,<1
 ollama
