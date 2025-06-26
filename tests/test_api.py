@@ -16,6 +16,12 @@ def test_chat_route():
     assert "response" in resp.json()
 
 
+def test_root_serves_ui():
+    resp = client.get("/")
+    assert resp.status_code == 200
+    assert "CivicAI Chat" in resp.text
+
+
 def test_ingest_endpoint(monkeypatch):
     """POST /ingest returns completed status and calls ingest.main."""
 

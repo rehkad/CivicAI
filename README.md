@@ -14,7 +14,7 @@ CivicAI is a self-hosted AI chatbot that answers local government questions\u201
    ```bash
    uvicorn main:app --host 0.0.0.0 --port 8000
    ```
-7. Visit `http://localhost:8000/health` to confirm the server is running. `http://localhost:8000` returns `404` because no root page is served; the web interface is under `web/`.
+7. Visit `http://localhost:8000/health` to confirm the server is running. The front-end UI is served automatically at `http://localhost:8000`.
 
 Alternatively, execute `./start.sh` to perform steps 3–7 automatically.
 
@@ -77,7 +77,8 @@ python3 data/ingest.py  # or `python data/ingest.py`
 Edit `api/app.py` to add endpoints or change logic. The server automatically reloads when you restart the command above. Front-end and data-related code live under `web/` and `data/` respectively.
 
 The included web interface (`web/index.html`) sends messages to the FastAPI
-server at `http://localhost:8000/chat`.
+server at `http://localhost:8000/chat`. When the API is running, open
+`http://localhost:8000/` to use the chat UI.
 
 ### API Endpoints
 

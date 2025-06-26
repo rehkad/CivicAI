@@ -6,7 +6,8 @@ Press the **Send** button or hit **Enter** to submit a message.
 
 ## Launching the UI
 
-Any static file server can host the page. The simplest option is Python's built-in `http.server` module:
+Once the API server is running, open [http://localhost:8000/](http://localhost:8000/) in your browser to chat.
+Any static file server can host the page as well. The simplest option is Python's built-in `http.server` module:
 
 ```bash
 cd web
