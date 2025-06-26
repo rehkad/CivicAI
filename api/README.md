@@ -5,7 +5,7 @@ database. Before running the server, ingest city documents so the vector
 database can provide context:
 
 ```bash
-python3 ../data/ingest.py
+python3 ../data/ingest.py  # or `python ../data/ingest.py`
 uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 

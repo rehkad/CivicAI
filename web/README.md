@@ -10,7 +10,7 @@ Any static file server can host the page. The simplest option is Python's built-
 
 ```bash
 cd web
-python3 -m http.server 8080
+python3 -m http.server 8080  # or `python -m http.server`
 ```
 
 Then open [http://localhost:8080](http://localhost:8080) in your browser and interact with the chat.
