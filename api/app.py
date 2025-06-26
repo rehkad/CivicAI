@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from pathlib import Path
+import os
 
 app = FastAPI()
 
@@ -21,6 +22,8 @@ try:
     import openai
 except Exception:  # pragma: no cover - optional dependency
     openai = None
+if openai:
+    openai.api_key = os.getenv("OPENAI_API_KEY", "")
 
 try:
     from langchain.vectorstores import Chroma
@@ -71,13 +74,23 @@ class ChatEngine:
                 pass
         return "LLM response unavailable."
 
+
 engine = ChatEngine()
+
 
 class ChatRequest(BaseModel):
     message: str
 
+
 class ChatResponse(BaseModel):
     response: str
+
+
+@app.get("/health")
+async def health() -> dict[str, str]:
+    """Simple health check."""
+    return {"status": "ok"}
+
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest):
@@ -93,6 +106,20 @@ async def chat(req: ChatRequest):
     reply = await engine.generate(prompt)
     return {"response": reply}
 
+
+@app.post("/ingest")
+async def ingest_endpoint() -> dict[str, str]:
+    """Trigger data ingestion to rebuild the vector database."""
+    try:
+        from data.ingest import main as ingest_main
+
+        ingest_main()
+        return {"status": "completed"}
+    except Exception as exc:
+        return {"status": "error", "detail": str(exc)}
+
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
