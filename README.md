@@ -77,19 +77,22 @@ python3 data/ingest.py  # or `python data/ingest.py`
 Edit `api/app.py` to add endpoints or change logic. The server automatically reloads when you restart the command above. Front-end and data-related code live under `web/` and `data/` respectively.
 
 The included web interface (`web/index.html`) sends messages to the FastAPI
-server via the `/chat` endpoint on the same host. When the API is running,
-open `http://localhost:8000/` to use the chat UI.
+server. When the API is running, open `http://localhost:8000/` to use the chat
+UI. Responses stream back to the browser so you see the answer as it is
+generated.
 
 ### API Endpoints
 
 - `GET /health` – simple health check returning `{"status": "ok"}`.
 - `POST /chat` – send a message and receive an LLM response.
+- `POST /chat_stream` – same as `/chat` but streams tokens as they are generated.
 - `POST /ingest` – rebuild the local vector database from documents.
 
 Set the `OPENAI_API_KEY` environment variable if you want to use the OpenAI
 API. Leaving this variable unset makes the app rely solely on the local
 `openhermes` model via `ollama`. Without either model the server returns
-"LLM response unavailable.".
+"LLM response unavailable.". This open source model is downloaded with
+`ollama pull openhermes` and used by default.
 
 ### Running tests
 
