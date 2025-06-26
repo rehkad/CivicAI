@@ -15,8 +15,12 @@ CivicAI is a self-hosted AI chatbot that answers local government questions\u201
 6. Visit `http://localhost:8000` to verify the server is running.
 
 ### Ingesting city data
-Sample Santa Barbara documents are provided in `data/santa_barbara/`. Run the
-ingestion script to create a local Chroma database before starting the API:
+Sample Santa Barbara documents are provided in `data/santa_barbara/`. The
+ingestion script requires the `BAAI/bge-small-en` embeddings model. Download
+the model from [Hugging Face](https://huggingface.co/BAAI/bge-small-en) and
+place the files under `models/bge-small-en/` so they are available offline.
+Then run the ingestion script to create a local Chroma database before starting
+the API:
 
 ```bash
 python data/ingest.py
