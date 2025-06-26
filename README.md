@@ -86,7 +86,13 @@ API. Leaving this variable unset makes the app rely solely on the local
 
 ### Running tests
 
-Run `pytest` to execute the small test suite.
+Install the additional development packages before running the tests:
+
+```bash
+pip install -r requirements-dev.txt
+```
+
+Then execute the suite with `pytest`.
 
 ### Running on Replit
 
