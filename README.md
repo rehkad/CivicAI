@@ -11,6 +11,14 @@ CivicAI is a self-hosted AI chatbot that answers local government questions\u201
    ```
 5. Visit `http://localhost:8000` to verify the server is running.
 
+### Ingesting city data
+Sample Santa Barbara documents are provided in `data/santa_barbara/`. Run the
+ingestion script to create a local Chroma database before starting the API:
+
+```bash
+python data/ingest.py
+```
+
 ## Folder overview
 - **`api/`** \u2013 backend API server written in Python.
 - **`web/`** \u2013 front-end web application placeholder.
@@ -18,4 +26,7 @@ CivicAI is a self-hosted AI chatbot that answers local government questions\u201
 
 ## Development
 Edit `api/app.py` to add endpoints or change logic. The server automatically reloads when you restart the command above. Front-end and data-related code live under `web/` and `data/` respectively.
+
+The included web interface (`web/index.html`) sends messages to the FastAPI
+server at `http://localhost:8000/chat`.
 

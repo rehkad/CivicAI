@@ -1,7 +1,72 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+try:
+    import ollama
+except Exception:  # pragma: no cover - optional dependency
+    ollama = None
+
+try:
+    import openai
+except Exception:  # pragma: no cover - optional dependency
+    openai = None
+
+try:
+    from langchain.vectorstores import Chroma
+    from langchain.embeddings import OpenAIEmbeddings, HuggingFaceEmbeddings
+except Exception:  # pragma: no cover - optional dependency
+    Chroma = None
+    OpenAIEmbeddings = None
+    HuggingFaceEmbeddings = None
+
+embeddings = None
+vectordb = None
+if OpenAIEmbeddings or HuggingFaceEmbeddings:
+    try:
+        embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+    except Exception:
+        try:
+            embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-small-en")
+        except Exception:
+            embeddings = None
+
+if embeddings and Chroma:
+    try:
+        vectordb = Chroma(persist_directory="vector_db", embedding_function=embeddings)
+    except Exception:
+        vectordb = None
+
+
+class ChatEngine:
+    async def generate(self, prompt: str) -> str:
+        if ollama:
+            try:
+                result = ollama.generate(model="openhermes:latest", prompt=prompt)
+                return result.get("response", "")
+            except Exception:
+                pass
+        if openai:
+            try:
+                resp = openai.ChatCompletion.create(
+                    model="gpt-3.5-turbo",
+                    messages=[{"role": "user", "content": prompt}],
+                )
+                return resp.choices[0].message["content"].strip()
+            except Exception:
+                pass
+        return "LLM response unavailable."
+
+engine = ChatEngine()
 
 class ChatRequest(BaseModel):
     message: str
@@ -11,9 +76,17 @@ class ChatResponse(BaseModel):
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest):
-    """Handle chat messages and return a placeholder response."""
-    placeholder = f"You said: {req.message}. This is a placeholder response."
-    return {"response": placeholder}
+    """Return a response from the LLM with optional vector search context."""
+    context = ""
+    if vectordb:
+        try:
+            docs = vectordb.similarity_search(req.message, k=3)
+            context = "\n\n".join(d.page_content for d in docs)
+        except Exception:
+            context = ""
+    prompt = f"Context:\n{context}\n\nUser: {req.message}\nAssistant:"
+    reply = await engine.generate(prompt)
+    return {"response": reply}
 
 if __name__ == "__main__":
     import uvicorn
