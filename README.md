@@ -32,6 +32,11 @@ This creates wheel files under the `wheels/` directory. When offline, the
 `./setup.sh` script installs packages from this directory instead of contacting
 PyPI.
 
+If you run `./setup.sh` and see a message like `Missing wheel files for packages: fastapi ...`,
+it's because the required wheels aren't present in the `wheels/` folder. Run the
+`pip download` command above while online to populate the directory and then
+rerun `./setup.sh`.
+
 ### Using Ollama with OpenHermes
 1. Install [Ollama](https://ollama.ai) with:
    ```bash
