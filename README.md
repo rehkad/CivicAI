@@ -15,6 +15,8 @@ CivicAI is a self-hosted AI chatbot that answers local government questions\u201
    ```
 7. Visit `http://localhost:8000` to verify the server is running.
 
+Alternatively, execute `./start.sh` to perform steps 3–7 automatically.
+
 **Workflow:** run `./setup.sh`, then `python3 data/ingest.py` (or `python data/ingest.py`), and finally `python3 api/app.py` (or `python api/app.py`).
 
 ### Using Ollama with OpenHermes
