@@ -77,8 +77,8 @@ python3 data/ingest.py  # or `python data/ingest.py`
 Edit `api/app.py` to add endpoints or change logic. The server automatically reloads when you restart the command above. Front-end and data-related code live under `web/` and `data/` respectively.
 
 The included web interface (`web/index.html`) sends messages to the FastAPI
-server at `http://localhost:8000/chat`. When the API is running, open
-`http://localhost:8000/` to use the chat UI.
+server via the `/chat` endpoint on the same host. When the API is running,
+open `http://localhost:8000/` to use the chat UI.
 
 ### API Endpoints
 
