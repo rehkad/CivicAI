@@ -13,4 +13,5 @@ Available endpoints:
 
 - `GET /health` – verify the server is running.
 - `POST /chat` – interact with the language model.
+- `POST /chat_stream` – send `{"message": "<text>"}` and receive a plain-text stream of tokens. Unlike `/chat`, which returns a JSON object after generation finishes, this endpoint yields tokens as they are produced.
 - `POST /ingest` – rebuild the vector database.
