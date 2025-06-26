@@ -62,8 +62,9 @@ class ChatEngine:
     """Wrapper around whichever LLM is available."""
 
     fallback_message = (
-        "The assistant is running in demo mode. Configure an LLM to get real "
-        "answers."
+        "The assistant is running in demo mode.\n"
+        "Start Ollama with `ollama serve` or set `OPENAI_API_KEY` to enable "
+        "real answers."
     )
 
     def _fallback_stream(self, prompt: str):
@@ -161,7 +162,7 @@ async def chat_stream(req: ChatRequest):
         for token in engine.stream(prompt):
             yield token
 
-    return StreamingResponse(token_gen(), media_type="text/plain")
+    return StreamingResponse(token_gen(), media_type="text/plain; charset=utf-8")
 
 
 @app.post("/ingest")
