@@ -6,12 +6,13 @@ CivicAI is a self-hosted AI chatbot that answers local government questions\u201
    Your system may use the `python` command instead of `python3`; adjust the commands below accordingly.
 2. Clone this repository and change into its directory.
 3. (Optional) Create a virtual environment: `python3 -m venv .venv && source .venv/bin/activate` (use `python -m venv` if `python3` isn't available).
-4. Install dependencies using `./setup.sh`. When no internet connection is available the script installs from a prepopulated `wheels/` directory.
-5. Start the API server:
+4. Install dependencies using `./setup.sh`. When no internet connection is available the script installs from a prepopulated `wheels/` directory. This script also installs `pip` when it's missing.
+5. If you see `ModuleNotFoundError` errors (e.g., for FastAPI) or `pip` isn't found, rerun `./setup.sh` to ensure all dependencies are installed.
+6. Start the API server:
    ```bash
    uvicorn main:app --host 0.0.0.0 --port 8000
    ```
-6. Visit `http://localhost:8000` to verify the server is running.
+7. Visit `http://localhost:8000` to verify the server is running.
 
 **Workflow:** run `./setup.sh`, then `python3 data/ingest.py` (or `python data/ingest.py`), and finally `python3 api/app.py` (or `python api/app.py`).
 
