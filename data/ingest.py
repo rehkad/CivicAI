@@ -22,6 +22,9 @@ def get_embeddings():
     try:
         return OpenAIEmbeddings(model="text-embedding-3-small")
     except Exception:
+        model_dir = Path(__file__).parent.parent / "models" / "bge-small-en"
+        if model_dir.exists():
+            return HuggingFaceEmbeddings(model_name=str(model_dir))
         return HuggingFaceEmbeddings(model_name="BAAI/bge-small-en")
 
 
