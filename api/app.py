@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from pathlib import Path
 
 app = FastAPI()
 
@@ -36,7 +37,11 @@ if OpenAIEmbeddings or HuggingFaceEmbeddings:
         embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
     except Exception:
         try:
-            embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-small-en")
+            model_dir = Path(__file__).parent.parent / "models" / "bge-small-en"
+            if model_dir.exists():
+                embeddings = HuggingFaceEmbeddings(model_name=str(model_dir))
+            else:
+                embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-small-en")
         except Exception:
             embeddings = None
 
