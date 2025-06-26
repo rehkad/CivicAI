@@ -17,5 +17,8 @@ python3 -m http.server 8080  # or `python -m http.server`
 Then open [http://localhost:8080](http://localhost:8080) in your browser and interact with the chat.
 
 Messages are sent to the `/chat` endpoint on the API server. When hosting the
-front end separately, ensure the FastAPI server is reachable and adjust the
-endpoint URL in `index.html` if needed.
+front end separately, ensure the FastAPI server is reachable. You can set a
+global `API_BASE` variable before loading `index.html` to prefix the endpoint
+URLs. For example, if the API is served under `/api`, define
+`window.API_BASE = '/api'` and the page will request `${API_BASE}/chat` and
+`${API_BASE}/chat_stream` automatically.
