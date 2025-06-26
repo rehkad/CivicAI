@@ -16,6 +16,7 @@ if [ -z "$VIRTUAL_ENV" ]; then
     fi
     # shellcheck disable=SC1091
     source .venv/bin/activate
+    PY_CMD=$(command -v python)
 fi
 
 # Upgrade pip
