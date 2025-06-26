@@ -4,3 +4,4 @@ langchain
 chromadb
 openai
 ollama
+flake8
