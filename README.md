@@ -96,13 +96,17 @@ API. Leaving this variable unset makes the app rely solely on the local
 
 ### Running tests
 
-Install the additional development packages before running the tests:
+Before running `pytest`, **you must install the development requirements**:
 
 ```bash
 pip install -r requirements-dev.txt
 ```
 
-Then execute the suite with `pytest`.
+After the dependencies are installed, run the suite with:
+
+```bash
+pytest
+```
 
 ### Running on Replit
 
