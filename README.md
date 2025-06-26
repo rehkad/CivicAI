@@ -20,6 +20,12 @@ Alternatively, execute `./start.sh` to perform steps 3–7 automatically.
 
 **Workflow:** run `./setup.sh`, then `python3 data/ingest.py` (or `python data/ingest.py`), and finally `python3 api/app.py` (or `python api/app.py`).
 
+### Why pin versions?
+The `requirements.txt` file lists exact dependency versions so the
+project installs the same packages every time. This keeps the
+environment reproducible and avoids unexpected changes when working
+offline or rebuilding later.
+
 ### Populating `wheels/` for offline setup
 When you do have an internet connection, predownload the project dependencies so
 they're available later without network access:
