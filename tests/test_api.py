@@ -16,6 +16,14 @@ def test_chat_route():
     assert "response" in resp.json()
 
 
+def test_chat_stream_returns_chunks():
+    """POST /chat_stream streams at least one token."""
+    with client.stream("POST", "/chat_stream", json={"message": "Hello"}) as resp:
+        assert resp.status_code == 200
+        chunks = list(resp.iter_text())
+    assert len(chunks) >= 1
+
+
 def test_root_serves_ui():
     resp = client.get("/")
     assert resp.status_code == 200
