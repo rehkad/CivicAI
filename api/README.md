@@ -6,5 +6,5 @@ vector database can provide context:
 
 ```bash
 python ../data/ingest.py
-python app.py
+uvicorn main:app --host 0.0.0.0 --port 8000
 ```

@@ -10,7 +10,7 @@ CivicAI is a self-hosted AI chatbot that answers local government questions\u201
    and copied into `wheels/` before running this script.
 5. Start the API server:
    ```bash
-   python api/app.py
+   uvicorn main:app --host 0.0.0.0 --port 8000
    ```
 6. Visit `http://localhost:8000` to verify the server is running.
 
