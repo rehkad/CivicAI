@@ -20,6 +20,18 @@ Alternatively, execute `./start.sh` to perform steps 3–7 automatically.
 
 **Workflow:** run `./setup.sh`, then `python3 data/ingest.py` (or `python data/ingest.py`), and finally `python3 api/app.py` (or `python api/app.py`).
 
+### Populating `wheels/` for offline setup
+When you do have an internet connection, predownload the project dependencies so
+they're available later without network access:
+
+```bash
+pip download -r requirements.txt -d wheels
+```
+
+This creates wheel files under the `wheels/` directory. When offline, the
+`./setup.sh` script installs packages from this directory instead of contacting
+PyPI.
+
 ### Using Ollama with OpenHermes
 1. Install [Ollama](https://ollama.ai) with:
    ```bash
