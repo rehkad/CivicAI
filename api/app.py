@@ -62,8 +62,9 @@ class ChatEngine:
     """Wrapper around whichever LLM is available."""
 
     fallback_message = (
-        "The assistant is running in demo mode. Configure an LLM to get real "
-        "answers."
+        "The assistant is running in demo mode.\n"
+        "Start Ollama with `ollama serve` or set `OPENAI_API_KEY` to enable "
+        "real answers."
     )
 
     def _fallback_stream(self, prompt: str):

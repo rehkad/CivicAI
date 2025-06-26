@@ -94,6 +94,10 @@ API. Leaving this variable unset makes the app rely solely on the local
 "LLM response unavailable.". This open source model is downloaded with
 `ollama pull openhermes` and used by default.
 
+If you see responses starting with `(demo)`, no public LLM is configured.
+Run `ollama serve` to use the local model or set `OPENAI_API_KEY` to query
+OpenAI's API.
+
 ### Running tests
 
 Before running `pytest`, **you must install the development requirements**:
