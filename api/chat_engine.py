@@ -1,46 +1,25 @@
 from __future__ import annotations
 
-"""Wrapper around whichever LLM is available."""
+"""Simple wrapper to stream responses from OpenAI's chat API."""
 
 from typing import Iterable
-
+import os
 try:
-    from langchain.chains import ConversationChain
-    from langchain.llms import Ollama
+    from openai import OpenAI
 except Exception:  # pragma: no cover - optional dependency
-    ConversationChain = None
-    Ollama = None
-
-try:
-    from langchain_openai import ChatOpenAI
-except Exception:  # pragma: no cover - optional dependency
-    ChatOpenAI = None
-
-from langchain.memory import ConversationBufferMemory
-
+    OpenAI = None
 
 class ChatEngine:
+    """Handle chat completion requests."""
+
     fallback_message = (
-        "The assistant is running in demo mode. Configure an LLM to get real answers."
+        "The assistant is running in demo mode. Configure OPENAI_API_KEY for real answers."
     )
 
-    def __init__(self) -> None:
-        llm = None
-        if Ollama:
-            try:
-                llm = Ollama(model="llama2")
-            except Exception:  # pragma: no cover - optional dependency
-                llm = None
-        if llm is None and ChatOpenAI:
-            try:
-                llm = ChatOpenAI(temperature=0.7)
-            except Exception:  # pragma: no cover - optional dependency
-                llm = None
-
-        self.chain = None
-        if llm and ConversationChain:
-            memory = ConversationBufferMemory()
-            self.chain = ConversationChain(llm=llm, memory=memory)
+    def __init__(self, model: str = "gpt-3.5-turbo") -> None:
+        self.model = model
+        key = os.getenv("OPENAI_API_KEY")
+        self.client = OpenAI(api_key=key) if (key and OpenAI) else None
 
     def _fallback_stream(self, user_input: str) -> Iterable[str]:
         text = f"(demo) You said: {user_input}" if user_input else self.fallback_message
@@ -48,22 +27,19 @@ class ChatEngine:
             yield ch
 
     def stream(self, user_input: str) -> Iterable[str]:
-        if self.chain:
-            llm = self.chain.llm
-            if hasattr(llm, "stream"):
-                for chunk in llm.stream(user_input):
-                    if hasattr(chunk, "content"):
-                        yield chunk.content
-                    else:
-                        yield str(chunk)
-                self.chain.memory.save_context({"input": user_input}, {})
-                return
+        if self.client:
             try:
-                reply = self.chain.run(user_input)
-                for ch in reply:
-                    yield ch
+                response = self.client.chat.completions.create(
+                    model=self.model,
+                    messages=[{"role": "user", "content": user_input}],
+                    stream=True,
+                )
+                for chunk in response:
+                    delta = chunk.choices[0].delta
+                    if delta and delta.content:
+                        yield delta.content
                 return
-            except Exception:  # pragma: no cover - optional dependency
+            except Exception:
                 pass
         yield from self._fallback_stream(user_input)
 
