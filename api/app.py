@@ -16,21 +16,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-try:
-    import ollama
-except Exception:  # pragma: no cover - optional dependency
-    ollama = None
+from .chat_engine import ChatEngine
 
 try:
-    import openai
-except Exception:  # pragma: no cover - optional dependency
-    openai = None
-if openai:
-    openai.api_key = os.getenv("OPENAI_API_KEY", "")
-
-try:
-    from langchain.vectorstores import Chroma
-    from langchain.embeddings import OpenAIEmbeddings, HuggingFaceEmbeddings
+    from langchain_community.vectorstores import Chroma
+    from langchain_openai import OpenAIEmbeddings
+    from langchain_community.embeddings import HuggingFaceEmbeddings
 except Exception:  # pragma: no cover - optional dependency
     Chroma = None
     OpenAIEmbeddings = None
@@ -58,58 +49,9 @@ if embeddings and Chroma:
         vectordb = None
 
 
-class ChatEngine:
-    """Wrapper around whichever LLM is available."""
-
-    fallback_message = (
-        "The assistant is running in demo mode. Configure an LLM to get real "
-        "answers."
-    )
-
-    def _fallback_stream(self, prompt: str):
-        """Simple echo-style fallback when no LLM is configured."""
-        user_msg = prompt.split("User:")[-1].split("Assistant:")[0].strip()
-        text = f"(demo) You said: {user_msg}" if user_msg else self.fallback_message
-        for ch in text:
-            yield ch
-
-    def stream(self, prompt: str):
-        """Yield tokens from the model if streaming is supported."""
-        if ollama:
-            try:
-                for chunk in ollama.generate(
-                    model="openhermes:latest", prompt=prompt, stream=True
-                ):
-                    if isinstance(chunk, dict):
-                        yield chunk.get("response", "")
-                    else:
-                        yield str(chunk)
-                return
-            except Exception:
-                pass
-        if openai:
-            try:
-                resp = openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo",
-                    messages=[{"role": "user", "content": prompt}],
-                    stream=True,
-                )
-                for part in resp:
-                    delta = part["choices"][0]["delta"].get("content")
-                    if delta:
-                        yield delta
-                return
-            except Exception:
-                pass
-        # Fall back to a simple local response so the app still functions.
-        yield from self._fallback_stream(prompt)
-
-    def generate(self, prompt: str) -> str:
-        """Return the full response from the model."""
-        return "".join(list(self.stream(prompt)))
-
-
 engine = ChatEngine()
+
+
 
 
 class ChatRequest(BaseModel):
