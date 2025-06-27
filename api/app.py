@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, Body
 from typing import Optional
+import asyncio
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
@@ -97,7 +98,8 @@ async def chat(req: ChatRequest):
                 prompt = f"Context:\n{context}\n\nUser: {req.message}\nAssistant:"
             except Exception:
                 logger.exception("Vector search failed")
-        reply = engine.generate(prompt, timeout=30.0)
+        # Run generation in a thread to avoid blocking the event loop
+        reply = await asyncio.to_thread(engine.generate, prompt, timeout=30.0)
         logger.debug("POST /chat response: %s", reply)
         return {"response": reply}
     except Exception as exc:
@@ -119,8 +121,9 @@ async def chat_stream(req: ChatRequest):
             except Exception:
                 logger.exception("Vector search failed")
 
-        def token_gen():
-            for token in engine.stream(prompt, timeout=30.0):
+        async def token_gen():
+            tokens = await asyncio.to_thread(lambda: list(engine.stream(prompt, timeout=30.0)))
+            for token in tokens:
                 logger.debug("stream token: %s", token)
                 yield token
 
