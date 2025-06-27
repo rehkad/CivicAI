@@ -5,4 +5,5 @@ chromadb==0.4.24
 openai==0.28.1
 ollama==0.1.4
 langchain_openai==0.1.3
-langchain_community==0.0.27
+# langchain==0.1.17 requires langchain-community>=0.0.36,<0.1
+langchain_community==0.0.36
