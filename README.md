@@ -44,10 +44,12 @@ it's because the required wheels aren't present in the `wheels/` folder. Run the
 rerun `./setup.sh`.
 
 ### Configuring the LLM
-This version of CivicAI uses the OpenAI API by default. Set the
-`OPENAI_API_KEY` environment variable before starting the server so requests are
-sent to OpenAI's hosted models. When no API key is provided the app falls back
-to a simple demo mode that echoes your input.
+CivicAI now relies on [LangChain](https://python.langchain.com) to talk to a
+language model. The server will prefer the OpenAI API when the
+`OPENAI_API_KEY` environment variable is set. Without a key it will try to use
+a locally running [Ollama](https://ollama.ai) model (such as `llama2`).  If
+neither backend is available the app runs in a lightweight demo mode that
+simply echoes your input.
 
 ### Ingesting city data (optional)
 Sample Santa Barbara documents are provided in `data/santa_barbara/`. Run
@@ -76,9 +78,9 @@ generated.
 - `POST /ingest` – rebuild the local vector database from documents (optional).
 - `POST /scrape` – return text from a URL or uploaded file.
 
-Set the `OPENAI_API_KEY` environment variable so the chat endpoints use the
-OpenAI API. Without an API key the app runs in a limited demo mode that simply
-echoes your input.
+Set `OPENAI_API_KEY` to send requests to OpenAI's hosted models. When the
+variable is unset the server looks for an Ollama instance instead. If neither is
+available you will only see a short demo response.
 
 ### Running tests
 
