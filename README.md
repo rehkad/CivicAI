@@ -93,7 +93,7 @@ pip install -r requirements-dev.txt
 After the dependencies are installed, run the suite with:
 
 ```bash
-pytest
+python -m pytest
 ```
 
 ### Running on Replit
