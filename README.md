@@ -12,9 +12,9 @@ CivicAI is a self-hosted AI chatbot that answers local government questions\u201
 5. If you see `ModuleNotFoundError` errors (e.g., for FastAPI) or `pip` isn't found, rerun `./setup.sh` to ensure all dependencies are installed.
 6. Start the API server:
    ```bash
-   uvicorn main:app --host 0.0.0.0 --port 8000
+   uvicorn main:app --host 0.0.0.0 --port 5000
    ```
-7. Visit `http://localhost:8000/health` to confirm the server is running. The front-end UI is served automatically at `http://localhost:8000`.
+7. Visit `http://localhost:5000/health` to confirm the server is running. The front-end UI is served automatically at `http://localhost:5000`.
 
 Alternatively, execute `./start.sh` to perform steps 3–7 automatically.
 
@@ -66,7 +66,7 @@ internet connection the first time to download embeddings.
 Edit `api/app.py` to add endpoints or change logic. The server automatically reloads when you restart the command above. Front-end and data-related code live under `web/` and `data/` respectively.
 
 The included web interface (`web/index.html`) sends messages to the FastAPI
-server. When the API is running, open `http://localhost:8000/` to use the chat
+server. When the API is running, open `http://localhost:5000/` to use the chat
 UI. Responses stream back to the browser so you see the answer as it is
 generated.
 

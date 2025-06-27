@@ -1,5 +1,5 @@
 run = "bash start.sh"
 
 [[ports]]
-localPort = 8000
+localPort = 5000
 externalPort = 80

@@ -11,7 +11,7 @@ thread = None
 
 def setup_module(module):
     global server, thread
-    config = uvicorn.Config(app, host="127.0.0.1", port=8000, log_level="error")
+    config = uvicorn.Config(app, host="127.0.0.1", port=5000, log_level="error")
     server = uvicorn.Server(config)
     thread = threading.Thread(target=server.run, daemon=True)
     thread.start()
@@ -24,7 +24,7 @@ def teardown_module(module):
 
 
 def _post(path, payload=None):
-    url = f"http://127.0.0.1:8000{path}"
+    url = f"http://127.0.0.1:5000{path}"
     headers = {}
     data = None
     if payload is not None:
@@ -36,7 +36,7 @@ def _post(path, payload=None):
 
 
 def _get(path):
-    url = f"http://127.0.0.1:8000{path}"
+    url = f"http://127.0.0.1:5000{path}"
     with urllib.request.urlopen(url) as resp:
         return resp.read().decode()
 
