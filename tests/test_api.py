@@ -72,7 +72,8 @@ def test_ingest_endpoint(monkeypatch):
     called = {}
     def fake_main():
         called["hit"] = True
-    import types, sys
+    import types
+    import sys
     dummy = types.SimpleNamespace(main=fake_main)
     monkeypatch.setitem(sys.modules, "data.ingest", dummy)
     data = json.loads(_post("/ingest"))

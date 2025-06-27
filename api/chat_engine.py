@@ -1,9 +1,8 @@
-from __future__ import annotations
-
 """Wrapper that attempts to use a real LLM via LangChain."""
 
+from __future__ import annotations
+
 from typing import Iterable
-import os
 import logging
 import time
 

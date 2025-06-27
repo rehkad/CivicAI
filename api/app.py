@@ -2,13 +2,14 @@ from fastapi import FastAPI, HTTPException, Body
 from typing import Optional
 import asyncio
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from pathlib import Path
-import os
 import re
 from urllib.request import urlopen
 import logging
+from .chat_engine import ChatEngine
 
 WEB_DIR = Path(__file__).parent.parent / "web"
 
@@ -23,7 +24,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from .chat_engine import ChatEngine
+# Serve static files from the web directory for the chat UI
+app.mount("/", StaticFiles(directory=WEB_DIR, html=True), name="static")
 
 logger.debug("Initializing ChatEngine and vector DB stubs")
 vectordb = None  # Vector store disabled for debugging
@@ -46,14 +48,6 @@ class ScrapeResponse(BaseModel):
     text: str
 
 
-@app.get("/", response_class=FileResponse)
-async def index():
-    logger.debug("GET / called")
-    try:
-        return FileResponse(WEB_DIR / "index.html")
-    except Exception as exc:
-        logger.exception("Failed to serve index: %s", exc)
-        raise
 
 @app.get("/health")
 async def health() -> dict[str, str]:
