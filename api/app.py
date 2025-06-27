@@ -4,6 +4,7 @@ import asyncio
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from pathlib import Path
 import re
@@ -24,8 +25,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Serve static files from the web directory for the chat UI
-app.mount("/", StaticFiles(directory=WEB_DIR, html=True), name="static")
+# Serve static files under /static and return index.html at the root
+app.mount("/static", StaticFiles(directory=WEB_DIR), name="static")
+
+
+@app.get("/")
+async def index() -> FileResponse:
+    """Serve the front-end UI."""
+    return FileResponse(WEB_DIR / "index.html")
 
 logger.debug("Initializing ChatEngine and vector DB stubs")
 vectordb = None  # Vector store disabled for debugging
