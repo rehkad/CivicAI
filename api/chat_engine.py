@@ -1,11 +1,18 @@
 from __future__ import annotations
 
-"""Simple wrapper to stream responses from OpenAI's chat API."""
+"""Wrapper that attempts to use a real LLM via LangChain."""
 
 from typing import Iterable
 import os
+try:  # optional dependencies - ignore import failures during docs builds
+    from langchain_openai import ChatOpenAI
+    from langchain_community.llms import Ollama
+except Exception:  # pragma: no cover - optional dependency
+    ChatOpenAI = None
+    Ollama = None
+
 try:
-    from openai import OpenAI
+    from openai import OpenAI  # used only for fallback if streaming via SDK
 except Exception:  # pragma: no cover - optional dependency
     OpenAI = None
 
@@ -19,7 +26,24 @@ class ChatEngine:
     def __init__(self, model: str = "gpt-3.5-turbo") -> None:
         self.model = model
         key = os.getenv("OPENAI_API_KEY")
-        self.client = OpenAI(api_key=key) if (key and OpenAI) else None
+        self.llm = None
+        if key and ChatOpenAI:
+            try:
+                self.llm = ChatOpenAI(temperature=0.7, streaming=True, openai_api_key=key)
+            except Exception:  # pragma: no cover - optional dependency
+                self.llm = None
+        elif Ollama:
+            try:
+                self.llm = Ollama(model="llama2", streaming=True)
+            except Exception:  # pragma: no cover - optional dependency
+                self.llm = None
+        # fallback to OpenAI SDK if available (for backward compatibility)
+        self.client = None
+        if self.llm is None and key and OpenAI:
+            try:
+                self.client = OpenAI(api_key=key)
+            except Exception:  # pragma: no cover - optional dependency
+                self.client = None
 
     def _fallback_stream(self, user_input: str) -> Iterable[str]:
         text = f"(demo) You said: {user_input}" if user_input else self.fallback_message
@@ -27,6 +51,16 @@ class ChatEngine:
             yield ch
 
     def stream(self, user_input: str) -> Iterable[str]:
+        if self.llm is not None:
+            try:
+                for chunk in self.llm.stream(user_input):
+                    if hasattr(chunk, "content"):
+                        yield chunk.content
+                    else:
+                        yield str(chunk)
+                return
+            except Exception:
+                pass
         if self.client:
             try:
                 response = self.client.chat.completions.create(
