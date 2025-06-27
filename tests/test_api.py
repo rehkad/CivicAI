@@ -1,46 +1,80 @@
-from fastapi.testclient import TestClient
+import threading
+import time
+import json
+import urllib.request
 from api.app import app
+import uvicorn
 
-client = TestClient(app)
+server = None
+thread = None
+
+
+def setup_module(module):
+    global server, thread
+    config = uvicorn.Config(app, host="127.0.0.1", port=8000, log_level="error")
+    server = uvicorn.Server(config)
+    thread = threading.Thread(target=server.run, daemon=True)
+    thread.start()
+    time.sleep(1)
+
+
+def teardown_module(module):
+    server.should_exit = True
+    thread.join()
+
+
+def _post(path, payload=None):
+    url = f"http://127.0.0.1:8000{path}"
+    headers = {}
+    data = None
+    if payload is not None:
+        data = json.dumps(payload).encode()
+        headers["Content-Type"] = "application/json"
+    req = urllib.request.Request(url, data=data, headers=headers, method="POST")
+    with urllib.request.urlopen(req) as resp:
+        return resp.read().decode()
+
+
+def _get(path):
+    url = f"http://127.0.0.1:8000{path}"
+    with urllib.request.urlopen(url) as resp:
+        return resp.read().decode()
 
 
 def test_health():
-    resp = client.get("/health")
-    assert resp.status_code == 200
-    assert resp.json() == {"status": "ok"}
+    data = json.loads(_get("/health"))
+    assert data == {"status": "ok"}
 
 
 def test_chat_route():
-    resp = client.post("/chat", json={"message": "Hello"})
-    assert resp.status_code == 200
-    assert "response" in resp.json()
+    data = json.loads(_post("/chat", {"message": "Hello"}))
+    assert "response" in data
 
 
 def test_chat_stream_returns_chunks():
-    """POST /chat_stream streams at least one token."""
-    with client.stream("POST", "/chat_stream", json={"message": "Hello"}) as resp:
-        assert resp.status_code == 200
-        chunks = list(resp.iter_text())
-    assert len(chunks) >= 1
+    text = _post("/chat_stream", {"message": "Hello"})
+    assert len(text) >= 1
+
+
+def test_scrape_file():
+    content = "name,city\nAlice,Springfield"
+    text = _post("/scrape", {"file_content": content})
+    data = json.loads(text)
+    assert "Alice" in data["text"]
 
 
 def test_root_serves_ui():
-    resp = client.get("/")
-    assert resp.status_code == 200
-    assert "CivicAI Chat" in resp.text
+    html = _get("/")
+    assert "CivicAI Chat" in html
 
 
 def test_ingest_endpoint(monkeypatch):
-    """POST /ingest returns completed status and calls ingest.main."""
-
     called = {}
-
     def fake_main():
         called["hit"] = True
-
-    monkeypatch.setattr("data.ingest.main", fake_main)
-
-    resp = client.post("/ingest")
-    assert resp.status_code == 200
-    assert resp.json() == {"status": "completed"}
+    import types, sys
+    dummy = types.SimpleNamespace(main=fake_main)
+    monkeypatch.setitem(sys.modules, "data.ingest", dummy)
+    data = json.loads(_post("/ingest"))
+    assert data == {"status": "completed"}
     assert called.get("hit") is True
