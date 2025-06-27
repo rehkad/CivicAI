@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, Body
+from typing import Optional
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
@@ -51,7 +52,7 @@ async def health() -> dict[str, str]:
 
 
 @app.post("/scrape", response_model=ScrapeResponse)
-async def scrape(url: str | None = Body(default=None), file_content: str | None = Body(default=None)):
+async def scrape(url: Optional[str] = Body(default=None), file_content: Optional[str] = Body(default=None)):
     """Fetch and return text from a URL or provided file content."""
     if not url and not file_content:
         raise HTTPException(status_code=400, detail="url or file_content required")
