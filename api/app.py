@@ -97,7 +97,8 @@ async def chat(req: ChatRequest):
                 prompt = f"Context:\n{context}\n\nUser: {req.message}\nAssistant:"
             except Exception:
                 logger.exception("Vector search failed")
-        reply = engine.generate(prompt)
+        reply = engine.generate(prompt, timeout=30.0)
+        logger.debug("POST /chat response: %s", reply)
         return {"response": reply}
     except Exception as exc:
         logger.exception("Chat endpoint failed: %s", exc)
@@ -119,7 +120,8 @@ async def chat_stream(req: ChatRequest):
                 logger.exception("Vector search failed")
 
         def token_gen():
-            for token in engine.stream(prompt):
+            for token in engine.stream(prompt, timeout=30.0):
+                logger.debug("stream token: %s", token)
                 yield token
 
         return StreamingResponse(token_gen(), media_type="text/plain; charset=utf-8")

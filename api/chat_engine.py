@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Iterable
 import os
 import logging
+import time
 
 # Optional language model integrations are disabled for debugging
 ChatOpenAI = None
@@ -30,11 +31,18 @@ class ChatEngine:
         for ch in text:
             yield ch
 
-    def stream(self, user_input: str) -> Iterable[str]:
+    def stream(self, user_input: str, timeout: float = 30.0) -> Iterable[str]:
+        """Yield tokens from the LLM with a hard timeout."""
         logger.debug("stream called with: %s", user_input)
-        # External model integrations disabled; always use fallback
-        yield from self._fallback_stream(user_input)
+        start = time.monotonic()
+        for ch in self._fallback_stream(user_input):
+            if time.monotonic() - start > timeout:
+                logger.warning("stream timeout reached")
+                break
+            yield ch
 
-    def generate(self, user_input: str) -> str:
-        logger.debug("generate called")
-        return "".join(list(self.stream(user_input)))
+    def generate(self, user_input: str, timeout: float = 30.0) -> str:
+        logger.debug("generate called with: %s", user_input)
+        text = "".join(list(self.stream(user_input, timeout=timeout)))
+        logger.debug("generate returning: %s", text)
+        return text
