@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CivicAI Chat</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.4/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <script>
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
@@ -20,6 +21,7 @@
         }
     </script>
     <style>
+        body { font-family: 'Inter', sans-serif; }
         .loader {
             border-top-color: #3490dc;
             animation: spin 1s ease-in-out infinite;
@@ -31,35 +33,75 @@
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 h-screen flex items-center justify-center">
-<div class="flex flex-col w-full max-w-xl h-[90vh] bg-white dark:bg-slate-800 rounded-xl shadow-xl overflow-hidden">
-    <header class="bg-gradient-to-r from-blue-700 to-purple-600 text-white p-4 text-center text-xl font-semibold shadow flex justify-between items-center">
-        <span>CivicAI Chat</span>
-        <button onclick="toggleTheme()" class="px-2 py-1 text-sm bg-white/20 rounded">🌙</button>
-    </header>
-    <div id="chat" class="flex-1 overflow-y-auto p-4 space-y-2"></div>
-    <form id="inputForm" class="flex border-t border-gray-200">
-        <input type="text" id="message" placeholder="Type your message..." autocomplete="off" required class="flex-1 p-3 outline-none" />
-        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4">Send</button>
-    </form>
+<div class="flex flex-col md:flex-row w-full max-w-6xl h-[90vh] bg-white dark:bg-slate-800 rounded-xl shadow-xl overflow-hidden">
+    <aside class="hidden md:flex flex-col w-64 bg-gradient-to-b from-blue-700 to-purple-600 text-white p-6 space-y-4">
+        <h1 class="text-2xl font-bold">CivicAI</h1>
+        <p class="text-sm">Get quick answers about your city services.</p>
+        <button onclick="newChat()" class="mt-4 bg-white/20 px-3 py-2 rounded">New Chat</button>
+        <div class="mt-auto">
+            <button onclick="toggleTheme()" class="flex items-center space-x-2 bg-white/20 px-3 py-2 rounded">
+                <span>Toggle Theme</span>
+                <span id="themeIcon">🌙</span>
+            </button>
+        </div>
+    </aside>
+    <div class="flex flex-col flex-1">
+        <header class="md:hidden bg-gradient-to-r from-blue-700 to-purple-600 text-white p-4 flex justify-between items-center">
+            <span class="font-semibold">CivicAI Chat</span>
+            <div class="space-x-2">
+                <button onclick="newChat()" class="px-2 py-1 text-sm bg-white/20 rounded">⟲</button>
+                <button onclick="toggleTheme()" class="px-2 py-1 text-sm bg-white/20 rounded">🌙</button>
+            </div>
+        </header>
+        <div id="chat" class="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50 dark:bg-slate-700"></div>
+        <form id="inputForm" class="flex items-center border-t border-gray-200 dark:border-gray-700 p-2 bg-white dark:bg-slate-800">
+            <input type="text" id="message" placeholder="Type your message..." autocomplete="off" required class="flex-1 px-3 py-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring" />
+            <button type="submit" class="ml-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded shadow">Send</button>
+        </form>
+    </div>
 </div>
 <script>
 const chat = document.getElementById('chat');
 const form = document.getElementById('inputForm');
 const input = document.getElementById('message');
-// Allow customizing the API prefix via `window.API_BASE`
 const API_BASE = window.API_BASE || '';
+let conversation = [];
+
+function saveConversation() {
+    localStorage.setItem('conversation', JSON.stringify(conversation));
+}
+
+function loadConversation() {
+    try {
+        conversation = JSON.parse(localStorage.getItem('conversation')) || [];
+    } catch {
+        conversation = [];
+    }
+    chat.innerHTML = '';
+    for (const msg of conversation) {
+        appendMessage(msg.text, msg.sender);
+    }
+}
+
+function newChat() {
+    conversation = [];
+    saveConversation();
+    chat.innerHTML = '';
+    input.focus();
+}
 
 function appendMessage(text, sender) {
     const div = document.createElement('div');
-    div.className =
-        (sender === 'You'
-            ? 'self-end bg-blue-600 text-white'
-            : 'self-start bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-50') +
+    div.className = (sender === 'You'
+        ? 'self-end bg-blue-600 text-white'
+        : 'self-start bg-white dark:bg-slate-600 text-gray-900 dark:text-gray-50') +
         ' whitespace-pre-wrap rounded-lg px-3 py-2 max-w-[80%] shadow';
     div.textContent = text;
     div.classList.add('msg');
     chat.appendChild(div);
     chat.scrollTop = chat.scrollHeight;
+    conversation.push({ text, sender });
+    saveConversation();
 }
 
 async function streamMessage(text) {
@@ -89,6 +131,8 @@ async function streamMessage(text) {
             }
         }
         spinner.remove();
+        conversation[conversation.length - 1].text = msgDiv.textContent;
+        saveConversation();
     } catch (err) {
         try {
             const fallback = await fetch(`${API_BASE}/chat`, {
@@ -100,9 +144,13 @@ async function streamMessage(text) {
             spinner.remove();
             msgDiv.textContent = data.response;
             chat.scrollTop = chat.scrollHeight;
+            conversation[conversation.length - 1].text = msgDiv.textContent;
+            saveConversation();
         } catch (err2) {
             spinner.remove();
             msgDiv.textContent = 'Error: ' + err2;
+            conversation[conversation.length - 1].text = msgDiv.textContent;
+            saveConversation();
         }
     }
 }
@@ -115,6 +163,9 @@ form.addEventListener('submit', e => {
     input.value = '';
     streamMessage(text);
 });
+
+loadConversation();
+input.focus();
 </script>
 </body>
 </html>
