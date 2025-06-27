@@ -43,6 +43,10 @@ class ChatEngine:
 
     def generate(self, user_input: str, timeout: float = 30.0) -> str:
         logger.debug("generate called with: %s", user_input)
-        text = "".join(list(self.stream(user_input, timeout=timeout)))
-        logger.debug("generate returning: %s", text)
-        return text
+        try:
+            text = "".join(list(self.stream(user_input, timeout=timeout)))
+            logger.debug("generate returning: %s", text)
+            return text
+        except Exception as exc:
+            logger.exception("ChatEngine crashed: %s", exc)
+            return self.fallback_message
