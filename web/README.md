@@ -1,8 +1,8 @@
 # Web
 
 This directory contains a single-page chat interface.
-The page now includes a clean layout with chat bubbles for a more polished experience.
-Press the **Send** button or hit **Enter** to submit a message.
+The UI now features a sidebar, theme toggle, and persistent conversations stored in your browser.
+Press the **Send** button or hit **Enter** to submit a message. Use the **New Chat** button to clear the history.
 
 ## Launching the UI
 
