@@ -10,7 +10,13 @@ from pathlib import Path
 import re
 from urllib.request import urlopen
 import logging
+import os
+import queue
+import threading
 from .chat_engine import ChatEngine
+from langchain_openai import OpenAIEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.vectorstores import Chroma
 
 WEB_DIR = Path(__file__).parent.parent / "web"
 
@@ -34,11 +40,22 @@ async def index() -> FileResponse:
     """Serve the front-end UI."""
     return FileResponse(WEB_DIR / "index.html")
 
-logger.debug("Initializing ChatEngine and vector DB stubs")
-vectordb = None  # Vector store disabled for debugging
-
-
+logger.debug("Initializing ChatEngine and vector DB")
+DB_DIR = Path(__file__).parent.parent / "vector_db"
 engine = ChatEngine()
+vectordb = None
+if DB_DIR.exists():
+    try:
+        try:
+            embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+        except Exception:
+            model_dir = Path(__file__).parent.parent / "models" / "bge-small-en"
+            name = str(model_dir) if model_dir.exists() else "BAAI/bge-small-en"
+            embeddings = HuggingFaceEmbeddings(model_name=name)
+        vectordb = Chroma(persist_directory=str(DB_DIR), embedding_function=embeddings)
+        logger.info("Loaded vector DB from %s", DB_DIR)
+    except Exception as exc:
+        logger.warning("Vector DB unavailable: %s", exc)
 
 
 
@@ -123,8 +140,21 @@ async def chat_stream(req: ChatRequest):
                 logger.exception("Vector search failed")
 
         async def token_gen():
-            tokens = await asyncio.to_thread(lambda: list(engine.stream(prompt, timeout=30.0)))
-            for token in tokens:
+            q: queue.Queue[str | None] = queue.Queue()
+
+            def worker() -> None:
+                try:
+                    for tok in engine.stream(prompt, timeout=30.0):
+                        q.put(tok)
+                finally:
+                    q.put(None)
+
+            thread = threading.Thread(target=worker, daemon=True)
+            thread.start()
+            while True:
+                token = await asyncio.to_thread(q.get)
+                if token is None:
+                    break
                 logger.debug("stream token: %s", token)
                 yield token
 
