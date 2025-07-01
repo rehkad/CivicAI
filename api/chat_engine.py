@@ -28,9 +28,15 @@ class ChatEngine:
     )
 
     def __init__(self, model: str = "gpt-3.5-turbo", ollama_model: str = "llama2") -> None:
-        """Initialize the engine and attempt to configure an LLM backend."""
-        self.model = model
-        self.ollama_model = ollama_model
+        """Initialize the engine and attempt to configure an LLM backend.
+
+        Model names can be overridden via the ``OPENAI_MODEL`` and
+        ``OLLAMA_MODEL`` environment variables.
+        """
+        env_model = os.getenv("OPENAI_MODEL")
+        env_ollama = os.getenv("OLLAMA_MODEL")
+        self.model = env_model or model
+        self.ollama_model = env_ollama or ollama_model
         self.llm = None
         self._init_llm()
 
