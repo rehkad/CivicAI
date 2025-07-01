@@ -77,6 +77,8 @@ Additional optional variables:
 - `CORS_ORIGINS` – comma-separated list of allowed CORS origins (default `*`).
 - `HOST` – address the server binds to (default `0.0.0.0`).
 - `PORT` – port number for the API server (default `5000`).
+- `SCRAPE_TIMEOUT` – seconds to wait when fetching URLs (default `10`).
+- `SCRAPE_MAX_BYTES` – maximum characters returned by `/scrape` (default `100000`).
 
 ## Folder overview
 - **`api/`** \u2013 backend API server written in Python.

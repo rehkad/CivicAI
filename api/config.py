@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     cors_origins: str = "*"
     server_host: str = "0.0.0.0"
     server_port: int = 5000
+    scrape_timeout: float = 10.0
+    scrape_max_bytes: int = 100000
 
     @property
     def allowed_origins(self) -> list[str]:

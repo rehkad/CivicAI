@@ -15,3 +15,6 @@ Available endpoints:
 - `POST /chat` – interact with the language model.
 - `POST /chat_stream` – send `{"message": "<text>"}` and receive a plain-text stream of tokens. Unlike `/chat`, which returns a JSON object after generation finishes, this endpoint yields tokens as they are produced.
 - `POST /ingest` – rebuild the vector database.
+- `POST /scrape` – return sanitized text from a URL or uploaded file.
+
+Scrape behaviour can be configured using `SCRAPE_TIMEOUT` and `SCRAPE_MAX_BYTES` environment variables.
