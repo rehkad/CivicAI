@@ -57,6 +57,15 @@ Sample Santa Barbara documents are provided in `data/santa_barbara/`. Run
 uses for extra context if available. This step is optional and requires an
 internet connection the first time to download embeddings.
 
+### Configuration
+Two environment variables control where data is stored:
+
+- `VECTOR_DB_DIR` – location of the Chroma vector store (default `vector_db/`).
+- `DATA_DIR` – directory of text files to ingest (default `data/santa_barbara/`).
+
+Both the ingestion script and the API server honor these variables so you can
+customize paths without editing the code.
+
 ## Folder overview
 - **`api/`** \u2013 backend API server written in Python.
 - **`web/`** \u2013 front-end web application placeholder.

@@ -79,3 +79,12 @@ def test_ingest_endpoint(monkeypatch):
     data = json.loads(_post("/ingest"))
     assert data == {"status": "completed"}
     assert called.get("hit") is True
+
+
+def test_env_overrides_vector_db(monkeypatch, tmp_path):
+    """The VECTOR_DB_DIR variable should control the DB location."""
+    monkeypatch.setenv("VECTOR_DB_DIR", str(tmp_path / "db"))
+    import importlib
+    import api.app as app_mod
+    importlib.reload(app_mod)
+    assert app_mod.DB_DIR == tmp_path / "db"
