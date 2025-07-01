@@ -82,6 +82,16 @@ def test_chat_engine_env_models(monkeypatch):
     assert engine.ollama_model == "bar"
 
 
+def test_settings_env(monkeypatch):
+    monkeypatch.setenv("LOG_LEVEL", "WARNING")
+    monkeypatch.setenv("CORS_ORIGINS", "https://a.com,https://b.com")
+    import api.config as cfg
+
+    importlib.reload(cfg)
+    assert cfg.settings.log_level == "WARNING"
+    assert cfg.settings.allowed_origins == ["https://a.com", "https://b.com"]
+
+
 def test_scrape_rejects_bad_scheme():
     resp = client.post("/scrape", json={"url": "file:///etc/passwd"})
     assert resp.status_code == 400
