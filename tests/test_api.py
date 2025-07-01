@@ -85,11 +85,15 @@ def test_chat_engine_env_models(monkeypatch):
 def test_settings_env(monkeypatch):
     monkeypatch.setenv("LOG_LEVEL", "WARNING")
     monkeypatch.setenv("CORS_ORIGINS", "https://a.com,https://b.com")
+    monkeypatch.setenv("HOST", "127.0.0.1")
+    monkeypatch.setenv("PORT", "1234")
     import api.config as cfg
 
     importlib.reload(cfg)
     assert cfg.settings.log_level == "WARNING"
     assert cfg.settings.allowed_origins == ["https://a.com", "https://b.com"]
+    assert cfg.settings.server_host == "127.0.0.1"
+    assert cfg.settings.server_port == 1234
 
 
 def test_scrape_rejects_bad_scheme():

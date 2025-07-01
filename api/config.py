@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     ollama_model: str = "llama2"
     log_level: str = "INFO"
     cors_origins: str = "*"
+    server_host: str = "0.0.0.0"
+    server_port: int = 5000
 
     @property
     def allowed_origins(self) -> list[str]:

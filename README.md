@@ -10,11 +10,11 @@ CivicAI is a self-hosted AI chatbot that answers local government questions\u201
    If no environment is active, `./setup.sh` automatically creates `.venv` and installs packages there.
 4. Install dependencies using `./setup.sh`. When the `wheels/` directory contains wheel files the script installs from them; otherwise it falls back to downloading packages. This script also installs `pip` when it's missing and activates `.venv` when necessary.
 5. If you see `ModuleNotFoundError` errors (e.g., for FastAPI) or `pip` isn't found, rerun `./setup.sh` to ensure all dependencies are installed.
-6. Start the API server:
+6. Start the API server (customize the host and port with `HOST` and `PORT`):
    ```bash
-   uvicorn main:app --host 0.0.0.0 --port 5000
+   HOST=0.0.0.0 PORT=5000 uvicorn main:app --host "$HOST" --port "$PORT"
    ```
-7. Visit `http://localhost:5000/health` to confirm the server is running. The front-end UI is served automatically at `http://localhost:5000`.
+7. Visit `http://<host>:<port>/health` to confirm the server is running. The front-end UI is served automatically at `http://<host>:<port>`.
 
 Alternatively, execute `./start.sh` to perform steps 3–7 automatically.
 
@@ -75,6 +75,8 @@ Additional optional variables:
 
 - `LOG_LEVEL` – Python logging level (default `INFO`).
 - `CORS_ORIGINS` – comma-separated list of allowed CORS origins (default `*`).
+- `HOST` – address the server binds to (default `0.0.0.0`).
+- `PORT` – port number for the API server (default `5000`).
 
 ## Folder overview
 - **`api/`** \u2013 backend API server written in Python.

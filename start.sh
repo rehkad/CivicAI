@@ -16,4 +16,5 @@ source .venv/bin/activate
 
 ./setup.sh
 
-.venv/bin/uvicorn main:app --host 0.0.0.0 --port 5000 --reload --log-level debug
+.venv/bin/uvicorn main:app --host "${HOST:-0.0.0.0}" --port "${PORT:-5000}" \
+    --reload --log-level debug

@@ -3,6 +3,7 @@
 from pathlib import Path
 import os
 import argparse
+import logging
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
@@ -12,6 +13,8 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 
 DEFAULT_DATA_DIR = Path(__file__).parent / "santa_barbara"
 DEFAULT_DB_DIR = Path(__file__).parent.parent / "vector_db"
+
+logger = logging.getLogger(__name__)
 
 
 def load_documents(data_dir: Path) -> list[str]:
@@ -33,9 +36,10 @@ def get_embeddings():
 
 def ingest(data_dir: Path, db_dir: Path) -> None:
     """Process ``data_dir`` and write embeddings to ``db_dir``."""
+    logger.info("Ingesting documents from %s", data_dir)
     documents = load_documents(data_dir)
     splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
-    chunks = []
+    chunks: list[str] = []
     for doc in documents:
         chunks.extend(splitter.split_text(doc))
 
@@ -44,7 +48,7 @@ def ingest(data_dir: Path, db_dir: Path) -> None:
     ids = [str(i) for i in range(len(chunks))]
     vectordb.add_texts(chunks, ids=ids)
     vectordb.persist()
-    print(f"Ingested {len(chunks)} chunks into {db_dir}")
+    logger.info("Ingested %d chunks into %s", len(chunks), db_dir)
 
 
 def main(data_dir: Path | None = None, db_dir: Path | None = None) -> None:
@@ -70,4 +74,5 @@ def _cli() -> None:
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     _cli()
