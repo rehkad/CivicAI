@@ -1,5 +1,6 @@
-from fastapi import FastAPI, HTTPException, Body
+from fastapi import FastAPI, HTTPException, Body, Request
 from typing import Optional
+from contextlib import asynccontextmanager
 import asyncio
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
@@ -21,31 +22,6 @@ from .config import settings
 
 WEB_DIR = Path(__file__).parent.parent / "web"
 
-app = FastAPI()
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Serve static files under /static and return index.html at the root
-app.mount("/static", StaticFiles(directory=WEB_DIR), name="static")
-
-
-@app.get("/")
-async def index() -> FileResponse:
-    """Serve the front-end UI."""
-    return FileResponse(WEB_DIR / "index.html")
-
-
-logger.debug("Initializing ChatEngine and vector DB")
-engine: ChatEngine | None = None
-vectordb: Chroma | None = None
-
 
 def load_vectordb(db_dir: Path) -> Chroma | None:
     """Load a Chroma database from ``db_dir`` if present."""
@@ -66,15 +42,42 @@ def load_vectordb(db_dir: Path) -> Chroma | None:
         return None
 
 
-@app.on_event("startup")
-async def startup() -> None:
-    """Initialize the chat engine and vector DB."""
-    global engine, vectordb
-    engine = ChatEngine(
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Initialize resources on startup and clean up on shutdown."""
+    logger.debug("Initializing ChatEngine and vector DB")
+    app.state.engine = ChatEngine(
         model=settings.openai_model,
         ollama_model=settings.ollama_model,
     )
-    vectordb = load_vectordb(settings.vector_db_dir)
+    app.state.vectordb = load_vectordb(settings.vector_db_dir)
+    yield
+
+
+def create_app() -> FastAPI:
+    """Return a fully configured FastAPI application."""
+    app = FastAPI(lifespan=lifespan)
+    logging.basicConfig(level=logging.DEBUG)
+    logger = logging.getLogger(__name__)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    # Serve static files under /static and return index.html at the root
+    app.mount("/static", StaticFiles(directory=WEB_DIR), name="static")
+
+    @app.get("/")
+    async def index() -> FileResponse:
+        """Serve the front-end UI."""
+        return FileResponse(WEB_DIR / "index.html")
+
+    return app
+
+
+app = create_app()
+logger = logging.getLogger(__name__)
 
 
 class ChatRequest(BaseModel):
@@ -126,11 +129,12 @@ async def scrape(
 
 
 @app.post("/chat", response_model=ChatResponse)
-async def chat(req: ChatRequest):
+async def chat(req: ChatRequest, request: Request):
     """Return a response from the LLM with optional vector search context."""
     logger.debug("POST /chat called with: %s", req.message)
     try:
         prompt = req.message
+        vectordb: Chroma | None = request.app.state.vectordb
         if vectordb:
             try:
                 docs = vectordb.similarity_search(req.message, k=3)
@@ -139,6 +143,7 @@ async def chat(req: ChatRequest):
             except Exception:
                 logger.exception("Vector search failed")
         # Run generation in a thread to avoid blocking the event loop
+        engine: ChatEngine = request.app.state.engine
         reply = await asyncio.to_thread(engine.generate, prompt, timeout=30.0)
         logger.debug("POST /chat response: %s", reply)
         return {"response": reply}
@@ -148,11 +153,12 @@ async def chat(req: ChatRequest):
 
 
 @app.post("/chat_stream")
-async def chat_stream(req: ChatRequest):
+async def chat_stream(req: ChatRequest, request: Request):
     """Stream the LLM response token by token."""
     logger.debug("POST /chat_stream called with: %s", req.message)
     try:
         prompt = req.message
+        vectordb: Chroma | None = request.app.state.vectordb
         if vectordb:
             try:
                 docs = vectordb.similarity_search(req.message, k=3)
@@ -163,6 +169,8 @@ async def chat_stream(req: ChatRequest):
 
         async def token_gen():
             q: queue.Queue[str | None] = queue.Queue()
+
+            engine: ChatEngine = request.app.state.engine
 
             def worker() -> None:
                 try:
@@ -187,16 +195,14 @@ async def chat_stream(req: ChatRequest):
 
 
 @app.post("/ingest")
-async def ingest_endpoint() -> dict[str, str]:
+async def ingest_endpoint(request: Request) -> dict[str, str]:
     """Trigger data ingestion to rebuild the vector database."""
     logger.debug("POST /ingest called")
     try:
         from data.ingest import main as ingest_main
 
         ingest_main(settings.data_dir, settings.vector_db_dir)
-        # Refresh the global vector DB after ingestion
-        global vectordb
-        vectordb = load_vectordb(settings.vector_db_dir)
+        request.app.state.vectordb = load_vectordb(settings.vector_db_dir)
         return {"status": "completed"}
     except Exception as exc:
         logger.exception("ingest failed: %s", exc)
