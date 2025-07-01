@@ -20,23 +20,26 @@ except Exception:  # pragma: no cover - optional dependency
 
 logger = logging.getLogger(__name__)
 
+
 class ChatEngine:
     """Handle chat completion requests."""
 
-    fallback_message = (
-        "The assistant is running in demo mode. Configure OPENAI_API_KEY for real answers."
-    )
+    fallback_message = "The assistant is running in demo mode. Configure OPENAI_API_KEY for real answers."
 
-    def __init__(self, model: str = "gpt-3.5-turbo", ollama_model: str = "llama2") -> None:
+    def __init__(
+        self,
+        model: str | None = None,
+        ollama_model: str | None = None,
+    ) -> None:
         """Initialize the engine and attempt to configure an LLM backend.
 
-        Model names can be overridden via the ``OPENAI_MODEL`` and
-        ``OLLAMA_MODEL`` environment variables.
+        ``model`` and ``ollama_model`` override the ``OPENAI_MODEL`` and
+        ``OLLAMA_MODEL`` environment variables when provided.
         """
         env_model = os.getenv("OPENAI_MODEL")
         env_ollama = os.getenv("OLLAMA_MODEL")
-        self.model = env_model or model
-        self.ollama_model = env_ollama or ollama_model
+        self.model = model or env_model or "gpt-3.5-turbo"
+        self.ollama_model = ollama_model or env_ollama or "llama2"
         self.llm = None
         self._init_llm()
 
@@ -73,7 +76,10 @@ class ChatEngine:
         else:
             try:
                 if hasattr(self.llm, "stream"):
-                    iterator = (getattr(chunk, "content", str(chunk)) for chunk in self.llm.stream(user_input))
+                    iterator = (
+                        getattr(chunk, "content", str(chunk))
+                        for chunk in self.llm.stream(user_input)
+                    )
                 else:
                     text = self.llm.invoke(user_input)
                     iterator = iter(str(text))

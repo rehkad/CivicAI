@@ -1,5 +1,3 @@
-"""Ingest Santa Barbara documents into a local Chroma vector store."""
-
 """Ingest text documents into a local Chroma vector store."""
 
 from pathlib import Path
@@ -58,9 +56,15 @@ def main(data_dir: Path | None = None, db_dir: Path | None = None) -> None:
 
 
 def _cli() -> None:
-    parser = argparse.ArgumentParser(description="Ingest documents into a Chroma vector store")
-    parser.add_argument("--data-dir", type=Path, help="Directory of text files", default=None)
-    parser.add_argument("--db-dir", type=Path, help="Destination for the vector DB", default=None)
+    parser = argparse.ArgumentParser(
+        description="Ingest documents into a Chroma vector store"
+    )
+    parser.add_argument(
+        "--data-dir", type=Path, help="Directory of text files", default=None
+    )
+    parser.add_argument(
+        "--db-dir", type=Path, help="Destination for the vector DB", default=None
+    )
     args = parser.parse_args()
     main(args.data_dir, args.db_dir)
 
