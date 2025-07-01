@@ -11,6 +11,13 @@ class Settings(BaseSettings):
     data_dir: Path = Path("data/santa_barbara")
     openai_model: str = "gpt-3.5-turbo"
     ollama_model: str = "llama2"
+    log_level: str = "INFO"
+    cors_origins: str = "*"
+
+    @property
+    def allowed_origins(self) -> list[str]:
+        """Return the CORS origins parsed from ``cors_origins``."""
+        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
 
     class Config:
         env_prefix = ""

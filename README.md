@@ -71,6 +71,11 @@ Two environment variables control where data is stored:
 Both the ingestion script and the API server honor these variables so you can
 customize paths without editing the code.
 
+Additional optional variables:
+
+- `LOG_LEVEL` – Python logging level (default `INFO`).
+- `CORS_ORIGINS` – comma-separated list of allowed CORS origins (default `*`).
+
 ## Folder overview
 - **`api/`** \u2013 backend API server written in Python.
 - **`web/`** \u2013 front-end web application placeholder.

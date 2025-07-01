@@ -57,11 +57,11 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     """Return a fully configured FastAPI application."""
     app = FastAPI(lifespan=lifespan)
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=getattr(logging, settings.log_level.upper(), logging.INFO))
     logger = logging.getLogger(__name__)
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=settings.allowed_origins,
         allow_methods=["*"],
         allow_headers=["*"],
     )
