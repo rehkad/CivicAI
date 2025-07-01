@@ -1,102 +1,74 @@
-import threading
-import time
+import importlib
 import json
-import urllib.request
-from api.app import app
+from fastapi.testclient import TestClient
 import pytest
-import uvicorn
 
-server = None
-thread = None
+import api.app as app_mod
 
-
-def setup_module(module):
-    global server, thread
-    config = uvicorn.Config(app, host="127.0.0.1", port=5000, log_level="error")
-    server = uvicorn.Server(config)
-    thread = threading.Thread(target=server.run, daemon=True)
-    thread.start()
-    time.sleep(1)
-
-
-def teardown_module(module):
-    server.should_exit = True
-    thread.join()
-
-
-def _post(path, payload=None):
-    url = f"http://127.0.0.1:5000{path}"
-    headers = {}
-    data = None
-    if payload is not None:
-        data = json.dumps(payload).encode()
-        headers["Content-Type"] = "application/json"
-    req = urllib.request.Request(url, data=data, headers=headers, method="POST")
-    with urllib.request.urlopen(req) as resp:
-        return resp.read().decode()
-
-
-def _get(path):
-    url = f"http://127.0.0.1:5000{path}"
-    with urllib.request.urlopen(url) as resp:
-        return resp.read().decode()
+client = TestClient(app_mod.app)
 
 
 def test_health():
-    data = json.loads(_get("/health"))
-    assert data == {"status": "ok"}
+    resp = client.get("/health")
+    assert resp.status_code == 200
+    assert resp.json() == {"status": "ok"}
 
 
 def test_chat_route():
-    data = json.loads(_post("/chat", {"message": "Hello"}))
-    assert "response" in data
+    resp = client.post("/chat", json={"message": "Hello"})
+    assert resp.status_code == 200
+    assert "response" in resp.json()
 
 
 def test_chat_stream_returns_chunks():
-    text = _post("/chat_stream", {"message": "Hello"})
-    assert len(text) >= 1
+    resp = client.post("/chat_stream", json={"message": "Hello"})
+    assert resp.status_code == 200
+    assert len(resp.text) >= 1
 
 
 def test_scrape_file():
     content = "name,city\nAlice,Springfield"
-    text = _post("/scrape", {"file_content": content})
-    data = json.loads(text)
+    resp = client.post("/scrape", json={"file_content": content})
+    assert resp.status_code == 200
+    data = resp.json()
     assert "Alice" in data["text"]
 
 
 def test_root_serves_ui():
-    html = _get("/")
-    assert "CivicAI Chat" in html
+    resp = client.get("/")
+    assert resp.status_code == 200
+    assert "CivicAI Chat" in resp.text
 
 
 def test_ingest_endpoint(monkeypatch):
     called = {}
-    def fake_main():
+
+    def fake_main(data_dir=None, db_dir=None):
         called["hit"] = True
+
     import types
-    import sys
+
     dummy = types.SimpleNamespace(main=fake_main)
-    monkeypatch.setitem(sys.modules, "data.ingest", dummy)
-    data = json.loads(_post("/ingest"))
-    assert data == {"status": "completed"}
+    monkeypatch.setitem(importlib.sys.modules, "data.ingest", dummy)
+    resp = client.post("/ingest")
+    assert resp.json() == {"status": "completed"}
     assert called.get("hit") is True
 
 
 def test_env_overrides_vector_db(monkeypatch, tmp_path):
-    """The VECTOR_DB_DIR variable should control the DB location."""
     monkeypatch.setenv("VECTOR_DB_DIR", str(tmp_path / "db"))
-    import importlib
-    import api.app as app_mod
+    import api.config as cfg
+
+    importlib.reload(cfg)
     importlib.reload(app_mod)
-    assert app_mod.DB_DIR == tmp_path / "db"
+    assert cfg.settings.vector_db_dir == tmp_path / "db"
 
 
 def test_chat_engine_env_models(monkeypatch):
-    """Environment variables should set model names in ChatEngine."""
     monkeypatch.setenv("OPENAI_MODEL", "foo")
     monkeypatch.setenv("OLLAMA_MODEL", "bar")
-    import importlib
     import api.chat_engine as ce
+
     importlib.reload(ce)
     engine = ce.ChatEngine()
     assert engine.model == "foo"
@@ -104,7 +76,5 @@ def test_chat_engine_env_models(monkeypatch):
 
 
 def test_scrape_rejects_bad_scheme():
-    import urllib.error
-    with pytest.raises(urllib.error.HTTPError) as exc:
-        _post("/scrape", {"url": "file:///etc/passwd"})
-    assert exc.value.code == 400
+    resp = client.post("/scrape", json={"url": "file:///etc/passwd"})
+    assert resp.status_code == 400

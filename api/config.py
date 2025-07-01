@@ -1,0 +1,20 @@
+from __future__ import annotations
+
+from pathlib import Path
+from pydantic import BaseSettings
+
+
+class Settings(BaseSettings):
+    """Application configuration loaded from environment variables."""
+
+    vector_db_dir: Path = Path("vector_db")
+    data_dir: Path = Path("data/santa_barbara")
+    openai_model: str = "gpt-3.5-turbo"
+    ollama_model: str = "llama2"
+
+    class Config:
+        env_prefix = ""
+        case_sensitive = False
+
+
+settings = Settings()

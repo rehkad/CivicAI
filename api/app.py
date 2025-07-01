@@ -11,13 +11,13 @@ import re
 from urllib.request import urlopen
 from urllib.parse import urlparse
 import logging
-import os
 import queue
 import threading
 from .chat_engine import ChatEngine
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
+from .config import settings
 
 WEB_DIR = Path(__file__).parent.parent / "web"
 
@@ -41,13 +41,16 @@ async def index() -> FileResponse:
     """Serve the front-end UI."""
     return FileResponse(WEB_DIR / "index.html")
 
+
 logger.debug("Initializing ChatEngine and vector DB")
-# Allow overriding the vector store location via the VECTOR_DB_DIR environment variable
-db_env = os.getenv("VECTOR_DB_DIR")
-DB_DIR = Path(db_env) if db_env else Path(__file__).parent.parent / "vector_db"
-engine = ChatEngine()
-vectordb = None
-if DB_DIR.exists():
+engine: ChatEngine | None = None
+vectordb: Chroma | None = None
+
+
+def load_vectordb(db_dir: Path) -> Chroma | None:
+    """Load a Chroma database from ``db_dir`` if present."""
+    if not db_dir.exists():
+        return None
     try:
         try:
             embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
@@ -55,12 +58,23 @@ if DB_DIR.exists():
             model_dir = Path(__file__).parent.parent / "models" / "bge-small-en"
             name = str(model_dir) if model_dir.exists() else "BAAI/bge-small-en"
             embeddings = HuggingFaceEmbeddings(model_name=name)
-        vectordb = Chroma(persist_directory=str(DB_DIR), embedding_function=embeddings)
-        logger.info("Loaded vector DB from %s", DB_DIR)
+        db = Chroma(persist_directory=str(db_dir), embedding_function=embeddings)
+        logger.info("Loaded vector DB from %s", db_dir)
+        return db
     except Exception as exc:
         logger.warning("Vector DB unavailable: %s", exc)
+        return None
 
 
+@app.on_event("startup")
+async def startup() -> None:
+    """Initialize the chat engine and vector DB."""
+    global engine, vectordb
+    engine = ChatEngine(
+        model=settings.openai_model,
+        ollama_model=settings.ollama_model,
+    )
+    vectordb = load_vectordb(settings.vector_db_dir)
 
 
 class ChatRequest(BaseModel):
@@ -75,7 +89,6 @@ class ScrapeResponse(BaseModel):
     text: str
 
 
-
 @app.get("/health")
 async def health() -> dict[str, str]:
     """Simple health check."""
@@ -84,7 +97,10 @@ async def health() -> dict[str, str]:
 
 
 @app.post("/scrape", response_model=ScrapeResponse)
-async def scrape(url: Optional[str] = Body(default=None), file_content: Optional[str] = Body(default=None)):
+async def scrape(
+    url: Optional[str] = Body(default=None),
+    file_content: Optional[str] = Body(default=None),
+):
     """Fetch and return text from a URL or provided file content."""
     logger.debug("POST /scrape called")
     try:
@@ -177,7 +193,10 @@ async def ingest_endpoint() -> dict[str, str]:
     try:
         from data.ingest import main as ingest_main
 
-        ingest_main()
+        ingest_main(settings.data_dir, settings.vector_db_dir)
+        # Refresh the global vector DB after ingestion
+        global vectordb
+        vectordb = load_vectordb(settings.vector_db_dir)
         return {"status": "completed"}
     except Exception as exc:
         logger.exception("ingest failed: %s", exc)
