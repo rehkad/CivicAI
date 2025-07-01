@@ -26,5 +26,6 @@ except ModuleNotFoundError as exc:  # pragma: no cover - triggers only when deps
 
 if __name__ == "__main__":
     import uvicorn
+    from api.config import settings
 
-    uvicorn.run(app, host="0.0.0.0", port=5000)
+    uvicorn.run(app, host=settings.server_host, port=settings.server_port)
