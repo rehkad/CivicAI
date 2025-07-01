@@ -9,12 +9,13 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from pathlib import Path
 import re
-from urllib.request import urlopen
 from urllib.parse import urlparse
+import httpx
 import logging
 import queue
 import threading
 from .chat_engine import ChatEngine
+from .utils import is_public_url
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
@@ -112,15 +113,18 @@ async def scrape(
         text = ""
         if url:
             parts = urlparse(url)
-            if parts.scheme not in {"http", "https"}:
-                raise HTTPException(status_code=400, detail="invalid url scheme")
-            with urlopen(url) as resp:
-                html = resp.read().decode()
+            if parts.scheme not in {"http", "https"} or not is_public_url(url):
+                raise HTTPException(status_code=400, detail="invalid url")
+            async with httpx.AsyncClient(timeout=settings.scrape_timeout) as client:
+                resp = await client.get(url)
+                resp.raise_for_status()
+                html = resp.text
             text = re.sub("<[^>]+>", " ", html)
             text = " ".join(text.split())
         elif file_content:
             text = file_content
-        return {"text": text[:1000]}
+        limit = settings.scrape_max_bytes
+        return {"text": text[:limit]}
     except HTTPException:
         raise
     except Exception as exc:

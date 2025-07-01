@@ -99,3 +99,19 @@ def test_settings_env(monkeypatch):
 def test_scrape_rejects_bad_scheme():
     resp = client.post("/scrape", json={"url": "file:///etc/passwd"})
     assert resp.status_code == 400
+
+
+def test_scrape_rejects_private_ip():
+    resp = client.post("/scrape", json={"url": "http://127.0.0.1"})
+    assert resp.status_code == 400
+
+
+def test_scrape_settings_env(monkeypatch):
+    monkeypatch.setenv("SCRAPE_TIMEOUT", "5.5")
+    monkeypatch.setenv("SCRAPE_MAX_BYTES", "123")
+    import importlib
+    import api.config as cfg
+
+    importlib.reload(cfg)
+    assert cfg.settings.scrape_timeout == 5.5
+    assert cfg.settings.scrape_max_bytes == 123
