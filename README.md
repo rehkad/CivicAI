@@ -51,6 +51,11 @@ a locally running [Ollama](https://ollama.ai) model (such as `llama2`).  If
 neither backend is available the app runs in a lightweight demo mode that
 simply echoes your input.
 
+You can override the default model names using environment variables:
+
+- `OPENAI_MODEL` – OpenAI chat model used when `OPENAI_API_KEY` is set.
+- `OLLAMA_MODEL` – local model name for the Ollama backend.
+
 ### Ingesting city data (optional)
 Sample Santa Barbara documents are provided in `data/santa_barbara/`. Run
 `python3 data/ingest.py` to create a local vector store which the chat endpoint

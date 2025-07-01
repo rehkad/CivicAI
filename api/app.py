@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from pathlib import Path
 import re
 from urllib.request import urlopen
+from urllib.parse import urlparse
 import logging
 import os
 import queue
@@ -91,6 +92,9 @@ async def scrape(url: Optional[str] = Body(default=None), file_content: Optional
             raise HTTPException(status_code=400, detail="url or file_content required")
         text = ""
         if url:
+            parts = urlparse(url)
+            if parts.scheme not in {"http", "https"}:
+                raise HTTPException(status_code=400, detail="invalid url scheme")
             with urlopen(url) as resp:
                 html = resp.read().decode()
             text = re.sub("<[^>]+>", " ", html)

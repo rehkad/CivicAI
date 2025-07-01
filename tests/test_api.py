@@ -3,6 +3,7 @@ import time
 import json
 import urllib.request
 from api.app import app
+import pytest
 import uvicorn
 
 server = None
@@ -88,3 +89,22 @@ def test_env_overrides_vector_db(monkeypatch, tmp_path):
     import api.app as app_mod
     importlib.reload(app_mod)
     assert app_mod.DB_DIR == tmp_path / "db"
+
+
+def test_chat_engine_env_models(monkeypatch):
+    """Environment variables should set model names in ChatEngine."""
+    monkeypatch.setenv("OPENAI_MODEL", "foo")
+    monkeypatch.setenv("OLLAMA_MODEL", "bar")
+    import importlib
+    import api.chat_engine as ce
+    importlib.reload(ce)
+    engine = ce.ChatEngine()
+    assert engine.model == "foo"
+    assert engine.ollama_model == "bar"
+
+
+def test_scrape_rejects_bad_scheme():
+    import urllib.error
+    with pytest.raises(urllib.error.HTTPError) as exc:
+        _post("/scrape", {"url": "file:///etc/passwd"})
+    assert exc.value.code == 400
