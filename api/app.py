@@ -41,7 +41,9 @@ async def index() -> FileResponse:
     return FileResponse(WEB_DIR / "index.html")
 
 logger.debug("Initializing ChatEngine and vector DB")
-DB_DIR = Path(__file__).parent.parent / "vector_db"
+# Allow overriding the vector store location via the VECTOR_DB_DIR environment variable
+db_env = os.getenv("VECTOR_DB_DIR")
+DB_DIR = Path(db_env) if db_env else Path(__file__).parent.parent / "vector_db"
 engine = ChatEngine()
 vectordb = None
 if DB_DIR.exists():
