@@ -8,6 +8,13 @@ import api.app as app_mod
 client = TestClient(app_mod.app)
 
 
+def test_create_app() -> None:
+    """create_app should return a new FastAPI instance each call."""
+    app1 = app_mod.create_app()
+    app2 = app_mod.create_app()
+    assert app1 is not app2
+
+
 def test_health():
     resp = client.get("/health")
     assert resp.status_code == 200
