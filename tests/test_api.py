@@ -1,7 +1,5 @@
 import importlib
-import json
 from fastapi.testclient import TestClient
-import pytest
 
 import api.app as app_mod
 
@@ -39,6 +37,12 @@ def test_scrape_file():
     assert resp.status_code == 200
     data = resp.json()
     assert "Alice" in data["text"]
+
+
+def test_scrape_requires_data():
+    """scrape should reject requests without url or file_content."""
+    resp = client.post("/scrape", json={})
+    assert resp.status_code == 400
 
 
 def test_root_serves_ui():
@@ -143,6 +147,7 @@ def test_build_prompt_with_vectordb():
 
     prompt = build_prompt("hello", DummyDB())
     assert "context1" in prompt and "User: hello" in prompt
+
 
 def test_setup_logging_sets_level(monkeypatch):
     import logging

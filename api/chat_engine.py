@@ -24,9 +24,7 @@ logger = logging.getLogger(__name__)
 class ChatEngine:
     """Handle chat completion requests."""
 
-    default_fallback_message = (
-        "The assistant is running in demo mode. Configure OPENAI_API_KEY for real answers."
-    )
+    default_fallback_message = "The assistant is running in demo mode. Configure OPENAI_API_KEY for real answers."
 
     def __init__(
         self,
