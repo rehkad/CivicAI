@@ -12,6 +12,8 @@ import re
 from urllib.parse import urlparse
 import httpx
 import logging
+
+from .logging_utils import setup_logging
 import queue
 import threading
 from .chat_engine import ChatEngine
@@ -20,6 +22,9 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 from .config import settings
+
+setup_logging(settings.log_level)
+logger = logging.getLogger(__name__)
 
 WEB_DIR = Path(__file__).parent.parent / "web"
 
@@ -72,8 +77,6 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     """Return a fully configured FastAPI application."""
     app = FastAPI(lifespan=lifespan)
-    logging.basicConfig(level=getattr(logging, settings.log_level.upper(), logging.INFO))
-    logger = logging.getLogger(__name__)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.allowed_origins,
@@ -92,7 +95,6 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
-logger = logging.getLogger(__name__)
 
 
 class ChatRequest(BaseModel):

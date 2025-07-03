@@ -71,9 +71,10 @@ Two environment variables control where data is stored:
 Both the ingestion script and the API server honor these variables so you can
 customize paths without editing the code.
 
-Additional optional variables:
+-Additional optional variables:
 
-- `LOG_LEVEL` – Python logging level (default `INFO`).
+- `LOG_LEVEL` – Python logging level (default `INFO`). The server
+  configures logging automatically using this level.
 - `CORS_ORIGINS` – comma-separated list of allowed CORS origins (default `*`).
 - `HOST` – address the server binds to (default `0.0.0.0`).
 - `PORT` – port number for the API server (default `5000`).
