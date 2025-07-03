@@ -107,8 +107,9 @@ generated.
 - `GET /health` – simple health check returning `{"status": "ok"}`.
 - `POST /chat` – send a message and receive an LLM response.
 - `POST /chat_stream` – same as `/chat` but streams tokens as they are generated.
- - `POST /ingest` – rebuild the local vector database from documents (optional). The server performs ingestion in a background thread so the API remains responsive.
- - `POST /scrape` – return text from a URL or uploaded file.
+- `POST /ingest` – rebuild the local vector database from documents (optional). The server performs ingestion in a background thread so the API remains responsive.
+ - `POST /scrape` – return text from a URL or uploaded file. HTML content is
+   sanitized so only plain text is returned.
 
 Set `OPENAI_API_KEY` to send requests to OpenAI's hosted models. When the
 variable is unset the server looks for an Ollama instance instead. If neither is

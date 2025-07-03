@@ -40,6 +40,13 @@ def test_scrape_file():
     assert "Alice" in data["text"]
 
 
+def test_scrape_html_sanitization():
+    html = "<html><body><h1>Hello</h1><p>World</p></body></html>"
+    resp = client.post("/scrape", json={"file_content": html})
+    assert resp.status_code == 200
+    assert resp.json()["text"] == "Hello World"
+
+
 def test_scrape_requires_data():
     """scrape should reject requests without url or file_content."""
     resp = client.post("/scrape", json={})
@@ -214,3 +221,10 @@ async def test_chat_engine_stream_async():
     async for chunk in engine.stream_async("hi", timeout=1.0):
         parts.append(chunk)
     assert "".join(parts)
+
+
+def test_html_to_text():
+    from api.utils import html_to_text
+
+    text = html_to_text("<div>Hello <b>world</b></div>")
+    assert text == "Hello world"

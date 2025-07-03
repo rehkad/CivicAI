@@ -1,5 +1,12 @@
+"""Utility helpers for the API server."""
+
+from __future__ import annotations
+
 import ipaddress
 from urllib.parse import urlparse
+from html.parser import HTMLParser
+
+__all__ = ["is_public_url", "html_to_text"]
 
 
 def is_public_url(url: str) -> bool:
@@ -21,3 +28,25 @@ def is_public_url(url: str) -> bool:
     except ValueError:
         # Host isn't an IP address; assume it's valid
         return True
+
+
+class _TextExtractor(HTMLParser):
+    """Internal HTML parser that collects text fragments."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.parts: list[str] = []
+
+    def handle_data(self, data: str) -> None:  # pragma: no cover - trivial
+        self.parts.append(data)
+
+    def text(self) -> str:
+        return " ".join(" ".join(self.parts).split())
+
+
+def html_to_text(html: str) -> str:
+    """Return ``html`` with tags stripped and whitespace normalized."""
+    parser = _TextExtractor()
+    parser.feed(html)
+    return parser.text()
+
