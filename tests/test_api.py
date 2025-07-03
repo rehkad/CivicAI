@@ -149,6 +149,15 @@ def test_fallback_message_env(monkeypatch):
     assert cfg.settings.fallback_message == "hello"
 
 
+def test_max_message_bytes_env(monkeypatch):
+    monkeypatch.setenv("MAX_MESSAGE_BYTES", "12")
+    import importlib
+    import api.config as cfg
+
+    importlib.reload(cfg)
+    assert cfg.settings.max_message_bytes == 12
+
+
 def test_build_prompt_with_vectordb():
     from api.app import build_prompt
 
@@ -191,6 +200,19 @@ def test_scrape_request_model_validation():
 
     with pytest.raises(ValidationError):
         ScrapeRequest()
+
+
+def test_chat_request_length_validation(monkeypatch):
+    monkeypatch.setenv("MAX_MESSAGE_BYTES", "5")
+    import importlib
+    import api.config as cfg
+    import api.app as app_mod
+
+    importlib.reload(cfg)
+    importlib.reload(app_mod)
+    client = TestClient(app_mod.app)
+    resp = client.post("/chat", json={"message": "abcdef"})
+    assert resp.status_code == 422
 
 
 def test_chat_engine_demo_mode(monkeypatch):
