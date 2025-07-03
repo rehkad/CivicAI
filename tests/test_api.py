@@ -152,3 +152,14 @@ def test_setup_logging_sets_level(monkeypatch):
     reload(lu)
     lu.setup_logging("DEBUG")
     assert logging.getLogger().getEffectiveLevel() == logging.DEBUG
+
+
+def test_env_file(monkeypatch, tmp_path):
+    env = tmp_path / ".env"
+    env.write_text("PORT=4321\n")
+    monkeypatch.chdir(tmp_path)
+    import importlib
+    import api.config as cfg
+
+    importlib.reload(cfg)
+    assert cfg.settings.server_port == 4321
