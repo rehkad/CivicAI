@@ -103,7 +103,7 @@ def test_settings_env(monkeypatch):
 
 def test_scrape_rejects_bad_scheme():
     resp = client.post("/scrape", json={"url": "file:///etc/passwd"})
-    assert resp.status_code == 400
+    assert resp.status_code == 422
 
 
 def test_scrape_rejects_private_ip():
@@ -120,6 +120,13 @@ def test_scrape_settings_env(monkeypatch):
     importlib.reload(cfg)
     assert cfg.settings.scrape_timeout == 5.5
     assert cfg.settings.scrape_max_bytes == 123
+
+
+def test_scrape_truncates_by_max_bytes(monkeypatch):
+    monkeypatch.setattr(app_mod.settings, "scrape_max_bytes", 5)
+    resp = client.post("/scrape", json={"file_content": "abcdefg"})
+    assert resp.status_code == 200
+    assert resp.json()["text"] == "abcde"
 
 
 def test_fallback_message_env(monkeypatch):
