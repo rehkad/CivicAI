@@ -81,9 +81,10 @@ customize paths without editing the code.
 - `PORT` – port number for the API server (default `5000`).
 - `SCRAPE_TIMEOUT` – seconds to wait when fetching URLs (default `10`).
 - `SCRAPE_MAX_BYTES` – maximum characters returned by `/scrape` (default `100000`).
+- `MAX_MESSAGE_BYTES` – maximum size of incoming chat messages (default `4000`).
 - `FALLBACK_MESSAGE` – text returned when no language model is available.
 
-Values for `PORT`, `SCRAPE_TIMEOUT`, and `SCRAPE_MAX_BYTES` are validated on
+Values for `PORT`, `SCRAPE_TIMEOUT`, `SCRAPE_MAX_BYTES`, and `MAX_MESSAGE_BYTES` are validated on
 startup. Misconfigured values raise a `ValueError` so issues surface early.
 
 All of these settings can be placed in a `.env` file in the project root. The
@@ -105,7 +106,8 @@ language model clients that are not thread safe.
 The included web interface (`web/index.html`) sends messages to the FastAPI
 server. When the API is running, open `http://localhost:5000/` to use the chat
 UI. Responses stream back to the browser so you see the answer as it is
-generated.
+generated. All requests are logged with their method, path, status code, and
+processing time for easy debugging.
 
 ### API Endpoints
 

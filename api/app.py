@@ -12,6 +12,7 @@ from pydantic import BaseModel, ValidationError, model_validator, HttpUrl
 from pathlib import Path
 import httpx
 import logging
+import time
 
 from .logging_utils import setup_logging
 from .chat_engine import ChatEngine
@@ -96,6 +97,20 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    @app.middleware("http")
+    async def log_requests(request: Request, call_next):
+        start = time.monotonic()
+        response = await call_next(request)
+        duration = (time.monotonic() - start) * 1000.0
+        logger.info(
+            "%s %s %s %.2fms",
+            request.method,
+            request.url.path,
+            response.status_code,
+            duration,
+        )
+        return response
     # Serve static files under /static and return index.html at the root
     app.mount("/static", StaticFiles(directory=WEB_DIR), name="static")
 
@@ -112,6 +127,12 @@ app = create_app()
 
 class ChatRequest(BaseModel):
     message: str
+
+    @model_validator(mode="after")
+    def _check_length(cls, values: "ChatRequest") -> "ChatRequest":
+        if len(values.message.encode("utf-8")) > settings.max_message_bytes:
+            raise ValueError("message too long")
+        return values
 
 
 class ChatResponse(BaseModel):

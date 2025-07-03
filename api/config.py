@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     server_port: int = 5000
     scrape_timeout: float = 10.0
     scrape_max_bytes: int = 100000
+    max_message_bytes: int = 4000
     fallback_message: str = (
         "The assistant is running in demo mode. Configure OPENAI_API_KEY for real answers."
     )
@@ -40,6 +41,13 @@ class Settings(BaseSettings):
     def _validate_max_bytes(cls, v: int) -> int:
         if v <= 0:
             raise ValueError("scrape_max_bytes must be positive")
+        return v
+
+    @field_validator("max_message_bytes")
+    @classmethod
+    def _validate_max_message(cls, v: int) -> int:
+        if v <= 0:
+            raise ValueError("max_message_bytes must be positive")
         return v
 
     @property
