@@ -51,6 +51,7 @@ class ChatEngine:
         self.ollama_model = ollama_model or env_ollama or "llama2"
         self.fallback_message = fallback_message or self.default_fallback_message
         self.llm = None
+        self._lock = asyncio.Lock()
         self._init_llm()
 
     @property
@@ -127,34 +128,35 @@ class ChatEngine:
 
     async def stream_async(self, user_input: str, timeout: float = 30.0) -> AsyncIterator[str]:
         """Asynchronously yield tokens from the LLM with a timeout."""
-        if self.llm is not None and hasattr(self.llm, "astream"):
-            start = time.monotonic()
-            try:
-                async for chunk in self.llm.astream(user_input):
-                    if time.monotonic() - start > timeout:
-                        logger.warning("stream_async timeout reached")
-                        break
-                    yield getattr(chunk, "content", str(chunk))
-                return
-            except Exception as exc:  # pragma: no cover - runtime failures
-                logger.exception("LLM async stream failed: %s", exc)
+        async with self._lock:
+            if self.llm is not None and hasattr(self.llm, "astream"):
+                start = time.monotonic()
+                try:
+                    async for chunk in self.llm.astream(user_input):
+                        if time.monotonic() - start > timeout:
+                            logger.warning("stream_async timeout reached")
+                            break
+                        yield getattr(chunk, "content", str(chunk))
+                    return
+                except Exception as exc:  # pragma: no cover - runtime failures
+                    logger.exception("LLM async stream failed: %s", exc)
 
-        q: queue.Queue[str | None] = queue.Queue()
+            q: queue.Queue[str | None] = queue.Queue()
 
-        def worker() -> None:
-            try:
-                for tok in self.stream(user_input, timeout=timeout):
-                    q.put(tok)
-            finally:
-                q.put(None)
+            def worker() -> None:
+                try:
+                    for tok in self.stream(user_input, timeout=timeout):
+                        q.put(tok)
+                finally:
+                    q.put(None)
 
-        thread = threading.Thread(target=worker, daemon=True)
-        thread.start()
-        while True:
-            token = await asyncio.to_thread(q.get)
-            if token is None:
-                break
-            yield token
+            thread = threading.Thread(target=worker, daemon=True)
+            thread.start()
+            while True:
+                token = await asyncio.to_thread(q.get)
+                if token is None:
+                    break
+                yield token
 
     async def generate_async(self, user_input: str, timeout: float = 30.0) -> str:
         """Return the full response text asynchronously."""

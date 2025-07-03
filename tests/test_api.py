@@ -228,3 +228,24 @@ def test_html_to_text():
 
     text = html_to_text("<div>Hello <b>world</b></div>")
     assert text == "Hello world"
+
+
+def test_settings_port_validation(monkeypatch):
+    monkeypatch.setenv("PORT", "70000")
+    import importlib
+    with pytest.raises(ValueError):
+        import api.config as cfg
+        importlib.reload(cfg)
+
+
+@pytest.mark.asyncio
+async def test_chat_engine_concurrent():
+    from api.chat_engine import ChatEngine
+
+    engine = ChatEngine()
+
+    async def call():
+        return await engine.generate_async("hi", timeout=1.0)
+
+    r1, r2 = await asyncio.gather(call(), call())
+    assert r1 and r2

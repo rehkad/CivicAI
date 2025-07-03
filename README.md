@@ -83,6 +83,9 @@ customize paths without editing the code.
 - `SCRAPE_MAX_BYTES` – maximum characters returned by `/scrape` (default `100000`).
 - `FALLBACK_MESSAGE` – text returned when no language model is available.
 
+Values for `PORT`, `SCRAPE_TIMEOUT`, and `SCRAPE_MAX_BYTES` are validated on
+startup. Misconfigured values raise a `ValueError` so issues surface early.
+
 All of these settings can be placed in a `.env` file in the project root. The
 server automatically loads this file on startup, so you can keep your
 environment variables out of shell scripts. See `.env.example` for a sample
@@ -96,6 +99,8 @@ configuration.
 ## Development
 Edit `api/app.py` to add endpoints or change logic. The server automatically reloads when you restart the command above. Front-end and data-related code live under `web/` and `data/` respectively.  
 The chat endpoints now leverage asynchronous LLM calls when possible so responses stream back efficiently.
+The underlying chat engine serializes concurrent requests to protect
+language model clients that are not thread safe.
 
 The included web interface (`web/index.html`) sends messages to the FastAPI
 server. When the API is running, open `http://localhost:5000/` to use the chat

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from pydantic import BaseSettings
+from pydantic import BaseSettings, field_validator
 
 
 class Settings(BaseSettings):
@@ -20,6 +20,27 @@ class Settings(BaseSettings):
     fallback_message: str = (
         "The assistant is running in demo mode. Configure OPENAI_API_KEY for real answers."
     )
+
+    @field_validator("server_port")
+    @classmethod
+    def _validate_port(cls, v: int) -> int:
+        if not (0 < v < 65536):
+            raise ValueError("server_port must be between 1 and 65535")
+        return v
+
+    @field_validator("scrape_timeout")
+    @classmethod
+    def _validate_timeout(cls, v: float) -> float:
+        if v <= 0:
+            raise ValueError("scrape_timeout must be positive")
+        return v
+
+    @field_validator("scrape_max_bytes")
+    @classmethod
+    def _validate_max_bytes(cls, v: int) -> int:
+        if v <= 0:
+            raise ValueError("scrape_max_bytes must be positive")
+        return v
 
     @property
     def allowed_origins(self) -> list[str]:
