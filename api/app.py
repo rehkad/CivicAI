@@ -1,6 +1,6 @@
 """FastAPI application exposing chat and scraping endpoints."""
 
-from fastapi import FastAPI, HTTPException, Body, Request
+from fastapi import FastAPI, HTTPException, Request
 from typing import Optional
 from contextlib import asynccontextmanager
 import asyncio
@@ -8,10 +8,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from pydantic import BaseModel, ValidationError, model_validator
+from pydantic import BaseModel, ValidationError, model_validator, HttpUrl
 from pathlib import Path
 import re
-from urllib.parse import urlparse
 import httpx
 import logging
 
@@ -125,11 +124,12 @@ class ChatResponse(BaseModel):
 class ScrapeRequest(BaseModel):
     """Input data for the ``/scrape`` endpoint."""
 
-    url: Optional[str] = None
+    url: Optional[HttpUrl] = None
     file_content: Optional[str] = None
 
     @model_validator(mode="after")
     def _validate_data(cls, values: "ScrapeRequest") -> "ScrapeRequest":
+        """Ensure at least one field is provided."""
         if not (values.url or values.file_content):
             raise ValueError("url or file_content required")
         return values
@@ -156,19 +156,25 @@ async def scrape(payload: ScrapeRequest):
     logger.debug("POST /scrape called")
     try:
         text = ""
+        limit = settings.scrape_max_bytes
         if payload.url:
-            parts = urlparse(payload.url)
-            if parts.scheme not in {"http", "https"} or not is_public_url(payload.url):
+            if not is_public_url(str(payload.url)):
                 raise HTTPException(status_code=400, detail="invalid url")
             async with httpx.AsyncClient(timeout=settings.scrape_timeout) as client:
-                resp = await client.get(payload.url)
-                resp.raise_for_status()
-                html = resp.text
+                async with client.stream("GET", str(payload.url)) as resp:
+                    resp.raise_for_status()
+                    parts = []
+                    size = 0
+                    async for chunk in resp.aiter_text():
+                        parts.append(chunk)
+                        size += len(chunk)
+                        if size >= limit:
+                            break
+                    html = "".join(parts)[:limit]
             text = re.sub("<[^>]+>", " ", html)
             text = " ".join(text.split())
         elif payload.file_content:
-            text = payload.file_content
-        limit = settings.scrape_max_bytes
+            text = payload.file_content.strip()
         return {"text": text[:limit]}
     except HTTPException:
         raise
