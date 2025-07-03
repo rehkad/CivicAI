@@ -9,12 +9,13 @@ CivicAI is a self-hosted AI chatbot that answers local government questions\u201
    `python3 -m venv .venv && source .venv/bin/activate` (use `python -m venv` if `python3` isn't available).
    If no environment is active, `./setup.sh` automatically creates `.venv` and installs packages there.
 4. Install dependencies using `./setup.sh`. When the `wheels/` directory contains wheel files the script installs from them; otherwise it falls back to downloading packages. This script also installs `pip` when it's missing and activates `.venv` when necessary.
-5. If you see `ModuleNotFoundError` errors (e.g., for FastAPI) or `pip` isn't found, rerun `./setup.sh` to ensure all dependencies are installed.
-6. Start the API server (customize the host and port with `HOST` and `PORT`):
+5. Copy `.env.example` to `.env` and adjust the settings if desired. The application automatically loads this file on startup.
+6. If you see `ModuleNotFoundError` errors (e.g., for FastAPI) or `pip` isn't found, rerun `./setup.sh` to ensure all dependencies are installed.
+7. Start the API server (customize the host and port with `HOST` and `PORT`):
    ```bash
    HOST=0.0.0.0 PORT=5000 uvicorn main:app --host "$HOST" --port "$PORT"
    ```
-7. Visit `http://<host>:<port>/health` to confirm the server is running. The front-end UI is served automatically at `http://<host>:<port>`.
+8. Visit `http://<host>:<port>/health` to confirm the server is running. The front-end UI is served automatically at `http://<host>:<port>`.
 
 Alternatively, execute `./start.sh` to perform steps 3–7 automatically.
 
@@ -81,6 +82,11 @@ customize paths without editing the code.
 - `SCRAPE_TIMEOUT` – seconds to wait when fetching URLs (default `10`).
 - `SCRAPE_MAX_BYTES` – maximum characters returned by `/scrape` (default `100000`).
 - `FALLBACK_MESSAGE` – text returned when no language model is available.
+
+All of these settings can be placed in a `.env` file in the project root. The
+server automatically loads this file on startup, so you can keep your
+environment variables out of shell scripts. See `.env.example` for a sample
+configuration.
 
 ## Folder overview
 - **`api/`** \u2013 backend API server written in Python.
