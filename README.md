@@ -94,7 +94,8 @@ configuration.
 - **`data/`** \u2013 example datasets and loading scripts.
 
 ## Development
-Edit `api/app.py` to add endpoints or change logic. The server automatically reloads when you restart the command above. Front-end and data-related code live under `web/` and `data/` respectively.
+Edit `api/app.py` to add endpoints or change logic. The server automatically reloads when you restart the command above. Front-end and data-related code live under `web/` and `data/` respectively.  
+The chat endpoints now leverage asynchronous LLM calls when possible so responses stream back efficiently.
 
 The included web interface (`web/index.html`) sends messages to the FastAPI
 server. When the API is running, open `http://localhost:5000/` to use the chat

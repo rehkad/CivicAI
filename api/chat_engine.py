@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Iterable
+from typing import Iterable, AsyncIterator
 import logging
 import os
 import time
+import asyncio
+import queue
+import threading
 
 # Attempt to import optional language model backends. They may be
 # unavailable in offline environments so failures are tolerated.
@@ -121,3 +124,43 @@ class ChatEngine:
                 self.llm.close()
             except Exception:
                 logger.warning("Failed to close LLM backend", exc_info=True)
+
+    async def stream_async(self, user_input: str, timeout: float = 30.0) -> AsyncIterator[str]:
+        """Asynchronously yield tokens from the LLM with a timeout."""
+        if self.llm is not None and hasattr(self.llm, "astream"):
+            start = time.monotonic()
+            try:
+                async for chunk in self.llm.astream(user_input):
+                    if time.monotonic() - start > timeout:
+                        logger.warning("stream_async timeout reached")
+                        break
+                    yield getattr(chunk, "content", str(chunk))
+                return
+            except Exception as exc:  # pragma: no cover - runtime failures
+                logger.exception("LLM async stream failed: %s", exc)
+
+        q: queue.Queue[str | None] = queue.Queue()
+
+        def worker() -> None:
+            try:
+                for tok in self.stream(user_input, timeout=timeout):
+                    q.put(tok)
+            finally:
+                q.put(None)
+
+        thread = threading.Thread(target=worker, daemon=True)
+        thread.start()
+        while True:
+            token = await asyncio.to_thread(q.get)
+            if token is None:
+                break
+            yield token
+
+    async def generate_async(self, user_input: str, timeout: float = 30.0) -> str:
+        """Return the full response text asynchronously."""
+        parts = []
+        async for chunk in self.stream_async(user_input, timeout=timeout):
+            parts.append(chunk)
+        text = "".join(parts)
+        logger.debug("generate_async returning: %s", text)
+        return text

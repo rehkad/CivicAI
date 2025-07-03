@@ -15,8 +15,6 @@ import httpx
 import logging
 
 from .logging_utils import setup_logging
-import queue
-import threading
 from .chat_engine import ChatEngine
 from .utils import is_public_url
 from langchain_openai import OpenAIEmbeddings
@@ -190,9 +188,8 @@ async def chat(req: ChatRequest, request: Request):
     try:
         vectordb: Chroma | None = request.app.state.vectordb
         prompt = build_prompt(req.message, vectordb)
-        # Run generation in a thread to avoid blocking the event loop
         engine: ChatEngine = request.app.state.engine
-        reply = await asyncio.to_thread(engine.generate, prompt, timeout=30.0)
+        reply = await engine.generate_async(prompt, timeout=30.0)
         logger.debug("POST /chat response: %s", reply)
         return {"response": reply}
     except Exception as exc:
@@ -209,23 +206,8 @@ async def chat_stream(req: ChatRequest, request: Request):
         prompt = build_prompt(req.message, vectordb)
 
         async def token_gen():
-            q: queue.Queue[str | None] = queue.Queue()
-
             engine: ChatEngine = request.app.state.engine
-
-            def worker() -> None:
-                try:
-                    for tok in engine.stream(prompt, timeout=30.0):
-                        q.put(tok)
-                finally:
-                    q.put(None)
-
-            thread = threading.Thread(target=worker, daemon=True)
-            thread.start()
-            while True:
-                token = await asyncio.to_thread(q.get)
-                if token is None:
-                    break
+            async for token in engine.stream_async(prompt, timeout=30.0):
                 logger.debug("stream token: %s", token)
                 yield token
 
