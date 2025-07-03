@@ -18,9 +18,10 @@ logger = logging.getLogger(__name__)
 
 
 def load_documents(data_dir: Path) -> list[str]:
+    """Return the UTF-8 contents of ``data_dir`` text files."""
     texts: list[str] = []
     for path in data_dir.glob("*.txt"):
-        texts.append(path.read_text())
+        texts.append(path.read_text(encoding="utf-8"))
     return texts
 
 
@@ -36,6 +37,11 @@ def get_embeddings():
 
 def ingest(data_dir: Path, db_dir: Path) -> None:
     """Process ``data_dir`` and write embeddings to ``db_dir``."""
+    data_dir = data_dir.expanduser()
+    db_dir = db_dir.expanduser()
+    if not data_dir.exists():
+        raise FileNotFoundError(f"{data_dir} does not exist")
+
     logger.info("Ingesting documents from %s", data_dir)
     documents = load_documents(data_dir)
     splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)

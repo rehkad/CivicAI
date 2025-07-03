@@ -143,3 +143,12 @@ def test_build_prompt_with_vectordb():
 
     prompt = build_prompt("hello", DummyDB())
     assert "context1" in prompt and "User: hello" in prompt
+
+def test_setup_logging_sets_level(monkeypatch):
+    import logging
+    from importlib import reload
+    import api.logging_utils as lu
+
+    reload(lu)
+    lu.setup_logging("DEBUG")
+    assert logging.getLogger().getEffectiveLevel() == logging.DEBUG
