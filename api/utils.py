@@ -31,14 +31,24 @@ def is_public_url(url: str) -> bool:
 
 
 class _TextExtractor(HTMLParser):
-    """Internal HTML parser that collects text fragments."""
+    """Internal HTML parser that collects text while skipping script/style tags."""
 
     def __init__(self) -> None:
         super().__init__()
         self.parts: list[str] = []
+        self._skip: bool = False
+
+    def handle_starttag(self, tag: str, _attrs) -> None:  # pragma: no cover - trivial
+        if tag in {"script", "style"}:
+            self._skip = True
+
+    def handle_endtag(self, tag: str) -> None:  # pragma: no cover - trivial
+        if tag in {"script", "style"}:
+            self._skip = False
 
     def handle_data(self, data: str) -> None:  # pragma: no cover - trivial
-        self.parts.append(data)
+        if not self._skip:
+            self.parts.append(data)
 
     def text(self) -> str:
         return " ".join(" ".join(self.parts).split())

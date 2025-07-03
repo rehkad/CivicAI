@@ -230,6 +230,13 @@ def test_html_to_text():
     assert text == "Hello world"
 
 
+def test_html_to_text_strips_script_style():
+    from api.utils import html_to_text
+
+    html = "<div>Good</div><script>bad()</script><style>.x{}</style>Bye"
+    assert html_to_text(html) == "Good Bye"
+
+
 def test_settings_port_validation(monkeypatch):
     monkeypatch.setenv("PORT", "70000")
     import importlib

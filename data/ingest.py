@@ -18,14 +18,15 @@ logger = logging.getLogger(__name__)
 
 
 def load_documents(data_dir: Path) -> list[str]:
-    """Return the UTF-8 contents of ``data_dir`` text files."""
+    """Return the UTF-8 contents of all ``*.txt`` files sorted by name."""
     texts: list[str] = []
-    for path in data_dir.glob("*.txt"):
+    for path in sorted(data_dir.glob("*.txt")):
         texts.append(path.read_text(encoding="utf-8"))
     return texts
 
 
 def get_embeddings():
+    """Return an embeddings backend, preferring OpenAI when available."""
     try:
         return OpenAIEmbeddings(model="text-embedding-3-small")
     except Exception:
