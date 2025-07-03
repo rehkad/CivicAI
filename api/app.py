@@ -105,6 +105,17 @@ class ChatResponse(BaseModel):
     response: str
 
 
+class ScrapeRequest(BaseModel):
+    """Input data for the ``/scrape`` endpoint."""
+
+    url: Optional[str] = None
+    file_content: Optional[str] = None
+
+    @property
+    def has_data(self) -> bool:
+        return bool(self.url or self.file_content)
+
+
 class ScrapeResponse(BaseModel):
     text: str
 
@@ -117,28 +128,25 @@ async def health() -> dict[str, str]:
 
 
 @app.post("/scrape", response_model=ScrapeResponse)
-async def scrape(
-    url: Optional[str] = Body(default=None),
-    file_content: Optional[str] = Body(default=None),
-):
+async def scrape(payload: ScrapeRequest):
     """Fetch and return text from a URL or provided file content."""
     logger.debug("POST /scrape called")
     try:
-        if not url and not file_content:
+        if not payload.has_data:
             raise HTTPException(status_code=400, detail="url or file_content required")
         text = ""
-        if url:
-            parts = urlparse(url)
-            if parts.scheme not in {"http", "https"} or not is_public_url(url):
+        if payload.url:
+            parts = urlparse(payload.url)
+            if parts.scheme not in {"http", "https"} or not is_public_url(payload.url):
                 raise HTTPException(status_code=400, detail="invalid url")
             async with httpx.AsyncClient(timeout=settings.scrape_timeout) as client:
-                resp = await client.get(url)
+                resp = await client.get(payload.url)
                 resp.raise_for_status()
                 html = resp.text
             text = re.sub("<[^>]+>", " ", html)
             text = " ".join(text.split())
-        elif file_content:
-            text = file_content
+        elif payload.file_content:
+            text = payload.file_content
         limit = settings.scrape_max_bytes
         return {"text": text[:limit]}
     except HTTPException:
