@@ -237,12 +237,14 @@ async def chat_stream(req: ChatRequest, request: Request):
 
 @app.post("/ingest")
 async def ingest_endpoint(request: Request) -> dict[str, str]:
-    """Trigger data ingestion to rebuild the vector database."""
+    """Trigger data ingestion without blocking the event loop."""
     logger.debug("POST /ingest called")
     try:
         from data.ingest import main as ingest_main
 
-        ingest_main(settings.data_dir, settings.vector_db_dir)
+        await asyncio.to_thread(
+            ingest_main, settings.data_dir, settings.vector_db_dir
+        )
         request.app.state.vectordb = load_vectordb(settings.vector_db_dir)
         return {"status": "completed"}
     except Exception as exc:
