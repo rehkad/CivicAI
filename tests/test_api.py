@@ -194,3 +194,23 @@ def test_chat_engine_demo_mode(monkeypatch):
     importlib.reload(ce)
     engine = ce.ChatEngine()
     assert engine.demo_mode is True
+
+
+@pytest.mark.asyncio
+async def test_chat_engine_generate_async():
+    from api.chat_engine import ChatEngine
+
+    engine = ChatEngine()
+    text = await engine.generate_async("hi", timeout=1.0)
+    assert text
+
+
+@pytest.mark.asyncio
+async def test_chat_engine_stream_async():
+    from api.chat_engine import ChatEngine
+
+    engine = ChatEngine()
+    parts = []
+    async for chunk in engine.stream_async("hi", timeout=1.0):
+        parts.append(chunk)
+    assert "".join(parts)
