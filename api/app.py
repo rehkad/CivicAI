@@ -1,3 +1,5 @@
+"""FastAPI application exposing chat and scraping endpoints."""
+
 from fastapi import FastAPI, HTTPException, Body, Request
 from typing import Optional
 from contextlib import asynccontextmanager
@@ -6,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError, model_validator
 from pathlib import Path
 import re
 from urllib.parse import urlparse
@@ -27,6 +29,15 @@ setup_logging(settings.log_level)
 logger = logging.getLogger(__name__)
 
 WEB_DIR = Path(__file__).parent.parent / "web"
+
+__all__ = [
+    "app",
+    "create_app",
+    "ChatRequest",
+    "ChatResponse",
+    "ScrapeRequest",
+    "ScrapeResponse",
+]
 
 
 def load_vectordb(db_dir: Path) -> Chroma | None:
@@ -71,7 +82,13 @@ async def lifespan(app: FastAPI):
         fallback_message=settings.fallback_message,
     )
     app.state.vectordb = load_vectordb(settings.vector_db_dir)
-    yield
+    try:
+        yield
+    finally:
+        try:
+            await asyncio.to_thread(app.state.engine.close)
+        except Exception:
+            logger.warning("Engine cleanup failed", exc_info=True)
 
 
 def create_app() -> FastAPI:
@@ -111,6 +128,12 @@ class ScrapeRequest(BaseModel):
     url: Optional[str] = None
     file_content: Optional[str] = None
 
+    @model_validator(mode="after")
+    def _validate_data(cls, values: "ScrapeRequest") -> "ScrapeRequest":
+        if not (values.url or values.file_content):
+            raise ValueError("url or file_content required")
+        return values
+
     @property
     def has_data(self) -> bool:
         return bool(self.url or self.file_content)
@@ -132,8 +155,6 @@ async def scrape(payload: ScrapeRequest):
     """Fetch and return text from a URL or provided file content."""
     logger.debug("POST /scrape called")
     try:
-        if not payload.has_data:
-            raise HTTPException(status_code=400, detail="url or file_content required")
         text = ""
         if payload.url:
             parts = urlparse(payload.url)

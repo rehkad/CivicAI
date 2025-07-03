@@ -1,4 +1,5 @@
 import importlib
+import pytest
 from fastapi.testclient import TestClient
 
 import api.app as app_mod
@@ -42,7 +43,7 @@ def test_scrape_file():
 def test_scrape_requires_data():
     """scrape should reject requests without url or file_content."""
     resp = client.post("/scrape", json={})
-    assert resp.status_code == 400
+    assert resp.status_code == 422
 
 
 def test_root_serves_ui():
@@ -168,3 +169,21 @@ def test_env_file(monkeypatch, tmp_path):
 
     importlib.reload(cfg)
     assert cfg.settings.server_port == 4321
+
+
+def test_scrape_request_model_validation():
+    from pydantic import ValidationError
+    from api.app import ScrapeRequest
+
+    with pytest.raises(ValidationError):
+        ScrapeRequest()
+
+
+def test_chat_engine_demo_mode(monkeypatch):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    import importlib
+    import api.chat_engine as ce
+
+    importlib.reload(ce)
+    engine = ce.ChatEngine()
+    assert engine.demo_mode is True

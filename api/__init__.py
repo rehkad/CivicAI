@@ -1,1 +1,3 @@
-"""Make the api directory a package for test imports."""
+"""Backend API package."""
+
+__all__ = ["create_app", "app"]

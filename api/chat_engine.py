@@ -22,7 +22,11 @@ logger = logging.getLogger(__name__)
 
 
 class ChatEngine:
-    """Handle chat completion requests."""
+    """Handle chat completion requests with optional streaming.
+
+    When no backend model is available the engine falls back to a short demo
+    response so the application remains usable in offline environments.
+    """
 
     default_fallback_message = "The assistant is running in demo mode. Configure OPENAI_API_KEY for real answers."
 
@@ -45,6 +49,11 @@ class ChatEngine:
         self.fallback_message = fallback_message or self.default_fallback_message
         self.llm = None
         self._init_llm()
+
+    @property
+    def demo_mode(self) -> bool:
+        """Return True when no LLM backend is configured."""
+        return self.llm is None
 
     def _init_llm(self) -> None:
         """Select an available LLM backend if possible."""
@@ -104,3 +113,11 @@ class ChatEngine:
         except Exception as exc:
             logger.exception("ChatEngine crashed: %s", exc)
             return self.fallback_message
+
+    def close(self) -> None:
+        """Release resources held by the underlying LLM client if possible."""
+        if hasattr(self.llm, "close"):
+            try:
+                self.llm.close()
+            except Exception:
+                logger.warning("Failed to close LLM backend", exc_info=True)
