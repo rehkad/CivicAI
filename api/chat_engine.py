@@ -24,22 +24,27 @@ logger = logging.getLogger(__name__)
 class ChatEngine:
     """Handle chat completion requests."""
 
-    fallback_message = "The assistant is running in demo mode. Configure OPENAI_API_KEY for real answers."
+    default_fallback_message = (
+        "The assistant is running in demo mode. Configure OPENAI_API_KEY for real answers."
+    )
 
     def __init__(
         self,
         model: str | None = None,
         ollama_model: str | None = None,
+        fallback_message: str | None = None,
     ) -> None:
         """Initialize the engine and attempt to configure an LLM backend.
 
         ``model`` and ``ollama_model`` override the ``OPENAI_MODEL`` and
-        ``OLLAMA_MODEL`` environment variables when provided.
+        ``OLLAMA_MODEL`` environment variables when provided. ``fallback_message``
+        customizes the demo response shown when no LLM backend is available.
         """
         env_model = os.getenv("OPENAI_MODEL")
         env_ollama = os.getenv("OLLAMA_MODEL")
         self.model = model or env_model or "gpt-3.5-turbo"
         self.ollama_model = ollama_model or env_ollama or "llama2"
+        self.fallback_message = fallback_message or self.default_fallback_message
         self.llm = None
         self._init_llm()
 
