@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     server_port: int = 5000
     scrape_timeout: float = 10.0
     scrape_max_bytes: int = 100000
+    fallback_message: str = (
+        "The assistant is running in demo mode. Configure OPENAI_API_KEY for real answers."
+    )
 
     @property
     def allowed_origins(self) -> list[str]:

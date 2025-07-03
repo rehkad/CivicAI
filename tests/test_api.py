@@ -115,3 +115,31 @@ def test_scrape_settings_env(monkeypatch):
     importlib.reload(cfg)
     assert cfg.settings.scrape_timeout == 5.5
     assert cfg.settings.scrape_max_bytes == 123
+
+
+def test_fallback_message_env(monkeypatch):
+    monkeypatch.setenv("FALLBACK_MESSAGE", "hello")
+    import importlib
+    import api.config as cfg
+    import api.chat_engine as ce
+
+    importlib.reload(cfg)
+    importlib.reload(ce)
+    engine = ce.ChatEngine()
+    assert engine.fallback_message == "hello"
+    assert cfg.settings.fallback_message == "hello"
+
+
+def test_build_prompt_with_vectordb():
+    from api.app import build_prompt
+
+    class Doc:
+        def __init__(self, text: str) -> None:
+            self.page_content = text
+
+    class DummyDB:
+        def similarity_search(self, _query: str, k: int = 3):
+            return [Doc("context1"), Doc("context2")]
+
+    prompt = build_prompt("hello", DummyDB())
+    assert "context1" in prompt and "User: hello" in prompt

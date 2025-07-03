@@ -43,6 +43,19 @@ def load_vectordb(db_dir: Path) -> Chroma | None:
         return None
 
 
+def build_prompt(message: str, vectordb: Chroma | None) -> str:
+    """Return a prompt with optional vector search context."""
+    prompt = message
+    if vectordb:
+        try:
+            docs = vectordb.similarity_search(message, k=3)
+            context = "\n\n".join(d.page_content for d in docs)
+            prompt = f"Context:\n{context}\n\nUser: {message}\nAssistant:"
+        except Exception:
+            logger.exception("Vector search failed")
+    return prompt
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize resources on startup and clean up on shutdown."""
@@ -50,6 +63,7 @@ async def lifespan(app: FastAPI):
     app.state.engine = ChatEngine(
         model=settings.openai_model,
         ollama_model=settings.ollama_model,
+        fallback_message=settings.fallback_message,
     )
     app.state.vectordb = load_vectordb(settings.vector_db_dir)
     yield
@@ -137,15 +151,8 @@ async def chat(req: ChatRequest, request: Request):
     """Return a response from the LLM with optional vector search context."""
     logger.debug("POST /chat called with: %s", req.message)
     try:
-        prompt = req.message
         vectordb: Chroma | None = request.app.state.vectordb
-        if vectordb:
-            try:
-                docs = vectordb.similarity_search(req.message, k=3)
-                context = "\n\n".join(d.page_content for d in docs)
-                prompt = f"Context:\n{context}\n\nUser: {req.message}\nAssistant:"
-            except Exception:
-                logger.exception("Vector search failed")
+        prompt = build_prompt(req.message, vectordb)
         # Run generation in a thread to avoid blocking the event loop
         engine: ChatEngine = request.app.state.engine
         reply = await asyncio.to_thread(engine.generate, prompt, timeout=30.0)
@@ -161,15 +168,8 @@ async def chat_stream(req: ChatRequest, request: Request):
     """Stream the LLM response token by token."""
     logger.debug("POST /chat_stream called with: %s", req.message)
     try:
-        prompt = req.message
         vectordb: Chroma | None = request.app.state.vectordb
-        if vectordb:
-            try:
-                docs = vectordb.similarity_search(req.message, k=3)
-                context = "\n\n".join(d.page_content for d in docs)
-                prompt = f"Context:\n{context}\n\nUser: {req.message}\nAssistant:"
-            except Exception:
-                logger.exception("Vector search failed")
+        prompt = build_prompt(req.message, vectordb)
 
         async def token_gen():
             q: queue.Queue[str | None] = queue.Queue()
