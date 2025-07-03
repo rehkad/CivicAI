@@ -10,13 +10,12 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, ValidationError, model_validator, HttpUrl
 from pathlib import Path
-import re
 import httpx
 import logging
 
 from .logging_utils import setup_logging
 from .chat_engine import ChatEngine
-from .utils import is_public_url
+from .utils import is_public_url, html_to_text
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
@@ -169,8 +168,7 @@ async def scrape(payload: ScrapeRequest):
                         if size >= limit:
                             break
                     html = "".join(parts)[:limit]
-            text = re.sub("<[^>]+>", " ", html)
-            text = " ".join(text.split())
+            text = html_to_text(html)
         elif payload.file_content:
             text = payload.file_content.strip()
         return {"text": text[:limit]}
