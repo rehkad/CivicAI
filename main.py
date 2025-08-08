@@ -1,30 +1,30 @@
-"""Entry point for running the FastAPI server on platforms like Replit."""
+"""Entry point for running the FastAPI server."""
 
-try:
-    from api.app import app
-except ModuleNotFoundError as exc:  # pragma: no cover - triggers only when deps missing
-    if exc.name == "fastapi":
-        import subprocess
-        from pathlib import Path
+import sys
+import uvicorn
 
-        script = Path(__file__).with_name("setup.sh")
-        if script.exists():
-            try:
-                subprocess.run(["bash", str(script)], check=True)
-                from api.app import app  # retry after installing deps
-            except Exception:
-                raise SystemExit(
-                    "FastAPI is not installed. Run './setup.sh' to install all dependencies."
-                ) from exc
-        else:
-            raise SystemExit(
-                "FastAPI is not installed. Run './setup.sh' to install all dependencies."
-            ) from exc
-    else:
-        raise
-
+def main():
+    try:
+        # Import the app to ensure it's available
+        from api.app import app
+        print("✅ App imported successfully")
+        
+        # Start the server
+        print("🚀 Starting CivicAI server on http://localhost:8000")
+        uvicorn.run(
+            "api.app:app", 
+            host="0.0.0.0", 
+            port=8000, 
+            reload=True,
+            log_level="info"
+        )
+    except ImportError as e:
+        print(f"❌ Import error: {e}")
+        print("💡 Make sure all dependencies are installed: pip install -r requirements.txt")
+        sys.exit(1)
+    except Exception as e:
+        print(f"❌ Error starting server: {e}")
+        sys.exit(1)
 
 if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    main()

@@ -1,0 +1,151 @@
+DEBUG:api.app:Initializing ChatEngine and attempting optional vector DB load
+INFO:api.app:Vector DB directory not found at /Users/rehankadri/Documents/CivicAI/CivicAI/vector_db - continuing without search
+INFO:api.chat_engine:Initialized Ollama with model: llama2
+INFO:     Started server process [51964]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+DEBUG:api.app:GET /health called
+INFO:     127.0.0.1:62793 - "GET /health HTTP/1.1" 200 OK
+DEBUG:api.app:POST /chat called with: Hello CivicAI
+DEBUG:api.chat_engine:generate called with: Hello CivicAI
+DEBUG:api.chat_engine:stream called with: Hello CivicAI
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): localhost:11434
+DEBUG:urllib3.connectionpool:http://localhost:11434 "POST /api/generate HTTP/1.1" 404 36
+ERROR:api.chat_engine:LLM error: Ollama call failed with status code 404. Maybe your model is not found and you should pull the model with `ollama pull llama2`.
+DEBUG:api.chat_engine:generate returning: (demo) You said: Hello CivicAI
+
+This is a demo response. To get real AI responses, set your OPENAI_API_KEY environment variable.
+DEBUG:api.app:POST /chat response: (demo) You said: Hello CivicAI
+
+This is a demo response. To get real AI responses, set your OPENAI_API_KEY environment variable.
+INFO:     127.0.0.1:62795 - "POST /chat HTTP/1.1" 200 OK
+DEBUG:api.app:POST /chat_stream called with: Stream test
+INFO:     127.0.0.1:62797 - "POST /chat_stream HTTP/1.1" 200 OK
+DEBUG:api.chat_engine:stream called with: Stream test
+DEBUG:urllib3.connectionpool:Starting new HTTP connection (1): localhost:11434
+DEBUG:urllib3.connectionpool:http://localhost:11434 "POST /api/generate HTTP/1.1" 404 36
+ERROR:api.chat_engine:LLM error: Ollama call failed with status code 404. Maybe your model is not found and you should pull the model with `ollama pull llama2`.
+DEBUG:api.app:stream token: (
+DEBUG:api.app:stream token: d
+DEBUG:api.app:stream token: e
+DEBUG:api.app:stream token: m
+DEBUG:api.app:stream token: o
+DEBUG:api.app:stream token: )
+DEBUG:api.app:stream token:  
+DEBUG:api.app:stream token: Y
+DEBUG:api.app:stream token: o
+DEBUG:api.app:stream token: u
+DEBUG:api.app:stream token:  
+DEBUG:api.app:stream token: s
+DEBUG:api.app:stream token: a
+DEBUG:api.app:stream token: i
+DEBUG:api.app:stream token: d
+DEBUG:api.app:stream token: :
+DEBUG:api.app:stream token:  
+DEBUG:api.app:stream token: S
+DEBUG:api.app:stream token: t
+DEBUG:api.app:stream token: r
+DEBUG:api.app:stream token: e
+DEBUG:api.app:stream token: a
+DEBUG:api.app:stream token: m
+DEBUG:api.app:stream token:  
+DEBUG:api.app:stream token: t
+DEBUG:api.app:stream token: e
+DEBUG:api.app:stream token: s
+DEBUG:api.app:stream token: t
+DEBUG:api.app:stream token: 
+
+DEBUG:api.app:stream token: 
+
+DEBUG:api.app:stream token: T
+DEBUG:api.app:stream token: h
+DEBUG:api.app:stream token: i
+DEBUG:api.app:stream token: s
+DEBUG:api.app:stream token:  
+DEBUG:api.app:stream token: i
+DEBUG:api.app:stream token: s
+DEBUG:api.app:stream token:  
+DEBUG:api.app:stream token: a
+DEBUG:api.app:stream token:  
+DEBUG:api.app:stream token: d
+DEBUG:api.app:stream token: e
+DEBUG:api.app:stream token: m
+DEBUG:api.app:stream token: o
+DEBUG:api.app:stream token:  
+DEBUG:api.app:stream token: r
+DEBUG:api.app:stream token: e
+DEBUG:api.app:stream token: s
+DEBUG:api.app:stream token: p
+DEBUG:api.app:stream token: o
+DEBUG:api.app:stream token: n
+DEBUG:api.app:stream token: s
+DEBUG:api.app:stream token: e
+DEBUG:api.app:stream token: .
+DEBUG:api.app:stream token:  
+DEBUG:api.app:stream token: T
+DEBUG:api.app:stream token: o
+DEBUG:api.app:stream token:  
+DEBUG:api.app:stream token: g
+DEBUG:api.app:stream token: e
+DEBUG:api.app:stream token: t
+DEBUG:api.app:stream token:  
+DEBUG:api.app:stream token: r
+DEBUG:api.app:stream token: e
+DEBUG:api.app:stream token: a
+DEBUG:api.app:stream token: l
+DEBUG:api.app:stream token:  
+DEBUG:api.app:stream token: A
+DEBUG:api.app:stream token: I
+DEBUG:api.app:stream token:  
+DEBUG:api.app:stream token: r
+DEBUG:api.app:stream token: e
+DEBUG:api.app:stream token: s
+DEBUG:api.app:stream token: p
+DEBUG:api.app:stream token: o
+DEBUG:api.app:stream token: n
+DEBUG:api.app:stream token: s
+DEBUG:api.app:stream token: e
+DEBUG:api.app:stream token: s
+DEBUG:api.app:stream token: ,
+DEBUG:api.app:stream token:  
+DEBUG:api.app:stream token: s
+DEBUG:api.app:stream token: e
+DEBUG:api.app:stream token: t
+DEBUG:api.app:stream token:  
+DEBUG:api.app:stream token: y
+DEBUG:api.app:stream token: o
+DEBUG:api.app:stream token: u
+DEBUG:api.app:stream token: r
+DEBUG:api.app:stream token:  
+DEBUG:api.app:stream token: O
+DEBUG:api.app:stream token: P
+DEBUG:api.app:stream token: E
+DEBUG:api.app:stream token: N
+DEBUG:api.app:stream token: A
+DEBUG:api.app:stream token: I
+DEBUG:api.app:stream token: _
+DEBUG:api.app:stream token: A
+DEBUG:api.app:stream token: P
+DEBUG:api.app:stream token: I
+DEBUG:api.app:stream token: _
+DEBUG:api.app:stream token: K
+DEBUG:api.app:stream token: E
+DEBUG:api.app:stream token: Y
+DEBUG:api.app:stream token:  
+DEBUG:api.app:stream token: e
+DEBUG:api.app:stream token: n
+DEBUG:api.app:stream token: v
+DEBUG:api.app:stream token: i
+DEBUG:api.app:stream token: r
+DEBUG:api.app:stream token: o
+DEBUG:api.app:stream token: n
+DEBUG:api.app:stream token: m
+DEBUG:api.app:stream token: e
+DEBUG:api.app:stream token: n
+DEBUG:api.app:stream token: t
+DEBUG:api.app:stream token:  
+DEBUG:api.app:stream token: v
+DEBUG:api.app:stream token: a
+DEBUG:api.app:stream token: r
+DEBUG:api.app:stream token: i

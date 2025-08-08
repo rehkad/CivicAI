@@ -1,0 +1,9 @@
+DEBUG:api.app:Initializing ChatEngine and attempting optional vector DB load
+INFO:api.app:Vector DB directory not found at /Users/rehankadri/Documents/CivicAI/CivicAI/vector_db - continuing without search
+INFO:api.chat_engine:Initialized Ollama with model: llama2
+INFO:     Started server process [51323]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+ERROR:    [Errno 48] error while attempting to bind on address ('127.0.0.1', 8000): address already in use
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.

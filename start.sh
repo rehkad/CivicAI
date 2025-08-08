@@ -1,19 +1,26 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
-PY_CMD=$(command -v python3 || command -v python)
-if [ -z "$PY_CMD" ]; then
-    echo "Python 3 is required." >&2
-    exit 1
+# Ensure virtual environment and dependencies
+if [ -z "${VIRTUAL_ENV:-}" ]; then
+  if [ ! -d ".venv" ]; then
+    echo "Creating virtual environment (.venv)"
+    python3 -m venv .venv || python -m venv .venv
+  fi
+  # shellcheck disable=SC1091
+  source .venv/bin/activate
 fi
 
-if [ ! -d ".venv" ]; then
-    "$PY_CMD" -m venv .venv
+if ! python -c "import fastapi" >/dev/null 2>&1; then
+  echo "Installing dependencies..."
+  pip install -r requirements.txt
 fi
 
-# shellcheck disable=SC1091
-source .venv/bin/activate
+# Kill any existing processes on port 8000
+if lsof -ti:8000 >/dev/null 2>&1; then
+  echo "Killing processes on port 8000"
+  lsof -ti:8000 | xargs kill -9 2>/dev/null || true
+fi
 
-./setup.sh
-
-.venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000 --reload --log-level debug
+echo "Starting CivicAI server on http://localhost:8000"
+exec uvicorn api.app:app --host 0.0.0.0 --port 8000 --reload --log-level info

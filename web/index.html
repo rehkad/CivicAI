@@ -102,11 +102,23 @@ function appendMessage(text, sender) {
     chat.scrollTop = chat.scrollHeight;
     conversation.push({ text, sender });
     saveConversation();
+    return div;
+}
+
+function appendCitations(msgDiv, citations) {
+    if (!citations || !citations.length) return;
+    const cite = document.createElement('div');
+    cite.className = 'mt-2 text-xs opacity-80';
+    cite.innerHTML = citations.map(c => {
+        const title = c.source || 'source';
+        const url = c.url ? `<a href="${c.url}" target="_blank" class="underline">link</a>` : '';
+        return `<span class="mr-2">[${title}] ${url}</span>`;
+    }).join('');
+    msgDiv.appendChild(cite);
 }
 
 async function streamMessage(text) {
-    appendMessage('', 'Bot');
-    const msgDiv = chat.lastChild;
+    const msgDiv = appendMessage('', 'Bot');
     const spinner = document.createElement('div');
     spinner.className = 'loader border-2 border-gray-200 rounded-full w-4 h-4 inline-block ml-1';
     msgDiv.appendChild(spinner);
@@ -133,6 +145,12 @@ async function streamMessage(text) {
         spinner.remove();
         conversation[conversation.length - 1].text = msgDiv.textContent;
         saveConversation();
+        // Fetch full response for citations
+        try {
+            const full = await fetch(`${API_BASE}/chat`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text }) });
+            const data = await full.json();
+            if (data && data.citations) appendCitations(msgDiv, data.citations);
+        } catch {}
     } catch (err) {
         try {
             const fallback = await fetch(`${API_BASE}/chat`, {
@@ -146,6 +164,7 @@ async function streamMessage(text) {
             chat.scrollTop = chat.scrollHeight;
             conversation[conversation.length - 1].text = msgDiv.textContent;
             saveConversation();
+            if (data.citations) appendCitations(msgDiv, data.citations);
         } catch (err2) {
             spinner.remove();
             msgDiv.textContent = 'Error: ' + err2;
